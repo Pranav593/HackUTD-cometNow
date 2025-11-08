@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "leaflet/dist/leaflet.css"; // <-- ADD THIS LINE HERE
 
 export const metadata: Metadata = {
   title: "HackUTD CometNow",
