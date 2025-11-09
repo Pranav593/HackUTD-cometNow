@@ -1,6 +1,28 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import genAI from '@/lib/gemini';
 
+// Helper function for retrying with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delay = 1000
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    // Check if the error is a GoogleGenerativeAI error with status 503
+    if (retries > 0 && error.status === 503) {
+      console.log(
+        `Model overloaded. Retrying in ${delay / 1000}s... (${retries} retries left)`
+      );
+      await new Promise((res) => setTimeout(res, delay));
+      return retryWithBackoff(fn, retries - 1, delay * 2);
+    }
+    // Re-throw other errors
+    throw error;
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -22,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'No events provided' });
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest" });
 
   const prompt = `
     You are a helpful student advisor at The University of Texas at Dallas.
@@ -41,20 +63,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       - Going: ${event.going || 0}
     `).join('')}
 
-    Based on the student's profile and the list of events, please recommend the top 5 events for this student.
+    Based on the student's profile and the list of events, you MUST recommend exactly 5 events for this student.
+    If there are not enough good matches, you must still select the 5 most suitable events from the list, even if the match is not perfect. Prioritize social events or events with high attendance if no other criteria match.
+    It is critical that you return a JSON array containing exactly 5 event IDs. Do not return fewer than 5.
     Return only a JSON array of the event IDs, like this: ["event_id_1", "event_id_2", "event_id_3", "event_id_4", "event_id_5"].
     Do not include any other text or explanation in your response.
   `;
 
+  console.log("Sending prompt to AI:", prompt);
+
   try {
-    const result = await model.generateContent(prompt);
+    const generationFn = () => model.generateContent(prompt);
+    const result = await retryWithBackoff(generationFn);
+    
     const response = await result.response;
     const text = response.text();
+    console.log("Received raw text from AI:", text);
     
     try {
       // First try to parse the entire response as JSON
       const recommendedEventIds = JSON.parse(text);
       if (Array.isArray(recommendedEventIds)) {
+        console.log('AI Recommendations (parsed):', recommendedEventIds);
         return res.status(200).json({ recommendedEventIds });
       }
     } catch {
@@ -66,16 +96,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(200).json({ recommendedEventIds });
         }
       } catch {
-        console.error('Failed to parse Gemini response:', text);
+        console.error('Failed to parse Google AI response:', text);
         return res.status(500).json({ message: 'Invalid response format from recommendation service' });
       }
     }
     
     return res.status(500).json({ message: 'Invalid response format from recommendation service' });
   } catch (error) {
-    console.error('Error calling Gemini API:', error);
+    console.error('Error calling Google AI API:', error);
     if (error instanceof Error) {
-      return res.status(500).json({ message: `Error generating recommendations: ${error.message}` });
+      const status = (error as any).status || 500;
+      return res.status(status).json({ 
+        message: `Error generating recommendations: ${error.message}`,
+        details: error instanceof Error ? error.stack : undefined
+      });
     }
     return res.status(500).json({ message: 'Error generating recommendations' });
   }
