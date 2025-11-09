@@ -4,6 +4,9 @@
 import { useEffect, useState } from "react";
 import { XMarkIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { containsInappropriateContent } from "../utils/content-filter";
+import { collection, addDoc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/lib/authContext";
 
 interface DropPinFormProps {
   isOpen: boolean;
@@ -24,6 +27,20 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
   const [endTime, setEndTime] = useState("10:00");
   const [endTimeAmPm, setEndTimeAmPm] = useState<"AM" | "PM">("AM");
   const [locationOptions, setLocationOptions] = useState<string[]>([]);
+  const { user } = useAuth();
+
+  const resetForm = () => {
+    setDescription("");
+    setDescriptionError("");
+    setLocation("");
+    setCategory("Other");
+    setDateMD("");
+    setStartTime("9:00");
+    setStartTimeAmPm("AM");
+    setEndTime("10:00");
+    setEndTimeAmPm("AM");
+    setShowInfo(false);
+  };
 
   // Load location names from public/enriched_locations.json
   useEffect(() => {
@@ -66,7 +83,7 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Check for inappropriate content
@@ -92,15 +109,35 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
       return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
     };
 
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
+
     const payload = {
+      id: '', // Will be set after creation
       title: description,
       category,
       location,
       date: fullDate, // yyyy-mm-dd (year fixed to 2025)
       startTime: to24Hour(startTime, startTimeAmPm), // HH:MM (24h)
       endTime: to24Hour(endTime, endTimeAmPm), // HH:MM (24h)
+      creatorId: user.uid,
+      going: 1, // Initialize with 1 (the creator)
+      coordinates: [0, 0], // Default coordinates, you might want to add actual location selection
     };
     console.log("Submitting:", payload);
+    try {
+      const docRef = await addDoc(collection(db, "events"), payload);
+      // Update the document with its ID
+      await updateDoc(docRef, { id: docRef.id });
+      console.log("Document written with ID: ", docRef.id);
+      onClose(); // Close form on successful submission
+      resetForm();
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      // Optionally, show an error to the user
+    }
   };
 
   return (
@@ -116,6 +153,7 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
         className="absolute inset-0"
         onClick={() => {
           onClose();
+          resetForm();
           setShowInfo(false); // Close info bubble when modal closes
         }}
       ></div>
@@ -136,6 +174,7 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
           <button
             onClick={() => {
               onClose();
+              resetForm();
               setShowInfo(false); // Close info bubble when modal closes
             }}
             className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"

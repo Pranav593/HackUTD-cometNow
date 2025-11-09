@@ -10,6 +10,9 @@ import DropPinForm from "@/app/components/DropPinForm";
 import EventDetailSheet from "@/app/components/EventDetailSheet";
 import EventListView from "@/app/components/EventListView"; 
 import { EventData } from "@/app/components/EventListItem"; 
+import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/lib/authContext";
 
 export default function Home() {
   // --- All app state now lives here ---
@@ -19,17 +22,117 @@ export default function Home() {
 
   // New state for new filters
   const [activeFilter, setActiveFilter] = useState<MainFilter>("All");
-  const [selectedCategory, setSelectedCategory] = useState("All"); // "All" or an EventCategory
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const [allEvents, setAllEvents] = useState<EventData[]>([]);
+  const [displayEvents, setDisplayEvents] = useState<EventData[]>([]);
+  const { user } = useAuth();
 
   // Fetch events ONCE when the page loads
   useEffect(() => {
-    fetch("/mock-events.json")
-      .then((res) => res.json())
-      .then((data) => setAllEvents(data))
-      .catch((err) => console.error("Error fetching mock events:", err));
+    const fetchEvents = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "events"));
+        const events = querySnapshot.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+        })) as EventData[];
+        setAllEvents(events);
+      } catch (err) {
+        console.error("Error fetching events:", err)
+      }
+    };
+
+    fetchEvents();
   }, []);
+
+  useEffect(() => {
+    const filterEvents = async () => {
+      let filtered = allEvents;
+
+      // Past events filter
+      if (activeFilter === 'Past') {
+        const now = new Date();
+        // Assuming endTime is a string that can be parsed into a Date
+        filtered = filtered.filter(event => {
+          const endDate = new Date(event.date + 'T' + event.endTime);
+          return endDate < now;
+        });
+      } else {
+        const now = new Date();
+        // Filter out past events unless the 'Past' filter is active
+        filtered = filtered.filter(event => {
+          const endDate = new Date(event.date + 'T' + event.endTime);
+          return endDate >= now;
+        });
+      }
+
+      // Category filter
+      if (selectedCategories.length > 0) {
+        filtered = filtered.filter(event => selectedCategories.includes(event.category));
+      }
+
+      // Going filter
+      if (activeFilter === 'Going' && user) {
+        const goingQuery = query(collection(db, "going"), where("userId", "==", user.uid));
+        const querySnapshot = await getDocs(goingQuery);
+        const eventIds = querySnapshot.docs.map(doc => doc.data().eventId);
+        
+        filtered = filtered.filter(event => eventIds.includes(event.id) || event.creatorId === user.uid);
+      }
+
+      // Recommended filter
+      if (activeFilter === 'Recommended' && user) {
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userProfile = userSnap.data();
+          
+          try {
+            const response = await fetch('/api/recommend', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ 
+                userProfile: {
+                  major: userProfile.major || '',
+                  year: userProfile.year || '',
+                  interests: userProfile.interests || []
+                }, 
+                events: allEvents 
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              if (Array.isArray(data.recommendedEventIds)) {
+                filtered = allEvents.filter(event => data.recommendedEventIds.includes(event.id));
+              } else {
+                console.error('Invalid recommendations format');
+                filtered = allEvents; // Fall back to showing all events
+              }
+            } else {
+              const error = await response.json();
+              console.error('Failed to fetch recommendations:', error.message);
+              filtered = allEvents; // Fall back to showing all events
+            }
+          } catch (error) {
+            console.error('Error calling recommendations API:', error);
+            filtered = allEvents; // Fall back to showing all events
+          }
+        } else {
+          // Handle case where user profile doesn't exist
+          filtered = [];
+        }
+      }
+
+      setDisplayEvents(filtered);
+    };
+
+    filterEvents();
+  }, [allEvents, activeFilter, selectedCategories, user]);
+
 
   // --- Handlers for the FilterBar ---
   const handleFilterChange = (filter: MainFilter) => {
@@ -37,8 +140,8 @@ export default function Home() {
     setIsListViewOpen(false); 
   };
 
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
+  const handleCategoryChange = (categories: string[]) => {
+    setSelectedCategories(categories);
     setActiveFilter("All"); 
     setIsListViewOpen(false);
   };
@@ -71,9 +174,9 @@ export default function Home() {
         <div className="absolute inset-0 z-0">
           <ClientMap
             onPinClick={setSelectedEvent}
-            events={allEvents}
+            events={displayEvents}
             activeFilter={activeFilter}
-            selectedCategory={selectedCategory}
+            selectedCategories={selectedCategories}
           />
         </div>
 
@@ -84,7 +187,7 @@ export default function Home() {
             <FilterBar
               activeFilter={activeFilter}
               onFilterChange={handleFilterChange}
-              selectedCategory={selectedCategory}
+              selectedCategories={selectedCategories}
               onCategoryChange={handleCategoryChange}
               onListViewClick={handleListViewClick}
             />
@@ -112,7 +215,7 @@ export default function Home() {
       <EventListView
         isOpen={isListViewOpen}
         onClose={() => setIsListViewOpen(false)}
-        events={allEvents}
+        events={displayEvents}
         onEventClick={handleEventFromListClick} // <-- THIS IS THE FIX
       />
     </main>

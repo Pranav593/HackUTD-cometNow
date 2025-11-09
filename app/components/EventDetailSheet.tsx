@@ -1,8 +1,7 @@
 // app/components/EventDetailSheet.tsx
 "use client";
 
-// --- 1. IMPORT useState and new components ---
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   XMarkIcon,
   InformationCircleIcon,
@@ -13,15 +12,15 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 import ReportModal from "./ReportModal"; 
+import { EventData } from "./EventListItem";
+import { useAuth } from "@/lib/authContext";
+import { db } from "@/lib/firebase";
+import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot, orderBy } from "firebase/firestore";
 
-// Define the shape of your event data
-interface EventData {
-  title: string;
-  category: "Food" | "Social" | "Study" | string;
-  locationName: string;
-  startTime: string;
-  endTime: string;
-  coordinates: [number, number];
+interface ChatMessage {
+  id: string;
+  userName: string;
+  text: string;
 }
 
 interface EventDetailSheetProps {
@@ -41,11 +40,48 @@ export default function EventDetailSheet({
   onClose,
 }: EventDetailSheetProps) {
   // --- 2. ADD STATE FOR INTERACTIVITY ---
-  const [goingCount, setGoingCount] = useState(5);
+  const [goingCount, setGoingCount] = useState(event?.going || 0);
   const [isGoing, setIsGoing] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false); 
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!event || !user) return;
+    const goingRef = doc(db, "going", `${user.uid}_${event.id}`);
+    getDoc(goingRef).then((docSnap) => {
+      if (docSnap.exists()) {
+        setIsGoing(true);
+      } else {
+        setIsGoing(false);
+      }
+    });
+    setGoingCount(event.going || 0);
+  }, [event, user]);
+
+  useEffect(() => {
+    if (!event || !isChatOpen) return;
+
+    const q = query(
+      collection(db, "messages"),
+      where("eventId", "==", event.id),
+      orderBy("timestamp", "asc")
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const msgs = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        userName: doc.data().userName,
+        text: doc.data().text,
+      }));
+      setMessages(msgs);
+    });
+
+    return () => unsubscribe();
+  }, [event, isChatOpen]);
+
 
   if (!event) return null;
 
@@ -56,17 +92,46 @@ export default function EventDetailSheet({
     });
   };
 
-  const handleGoingClick = () => {
-    if (!isGoing) {
-      setIsGoing(true);
+  const handleGoingClick = async () => {
+    if (!user || !event) return;
+
+    const eventRef = doc(db, "events", event.id);
+    const goingRef = doc(db, "going", `${user.uid}_${event.id}`);
+
+    if (isGoing) {
+      // User is already going, so remove them
+      await deleteDoc(goingRef);
+      await updateDoc(eventRef, {
+        going: increment(-1),
+      });
+      setGoingCount(goingCount - 1);
+      setIsGoing(false);
+    } else {
+      // User is not going, so add them
+      await setDoc(goingRef, {
+        userId: user.uid,
+        eventId: event.id,
+      });
+      await updateDoc(eventRef, {
+        going: increment(1),
+      });
       setGoingCount(goingCount + 1);
+      setIsGoing(true);
     }
   };
 
-  const handleChatSubmit = (e: React.FormEvent) => {
+  const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatMessage) return;
-    console.log("New chat message:", chatMessage);
+    if (!chatMessage || !user || !event) return;
+
+    await addDoc(collection(db, "messages"), {
+      eventId: event.id,
+      userId: user.uid,
+      userName: user.displayName || "Anonymous",
+      text: chatMessage,
+      timestamp: serverTimestamp(),
+    });
+
     setChatMessage("");
   };
 
@@ -75,10 +140,11 @@ export default function EventDetailSheet({
     onClose();
     setTimeout(() => {
       setIsGoing(false);
-      setGoingCount(5);
+      setGoingCount(0);
       setIsChatOpen(false);
       setChatMessage("");
       setIsReportModalOpen(false); 
+      setMessages([]);
     }, 300);
   };
 
@@ -129,7 +195,7 @@ export default function EventDetailSheet({
             <div className="text-center">
               <span className="text-sm text-gray-500">Location</span>
               <p className="font-semibold text-gray-800">
-                {event.locationName}
+                {event.location}
               </p>
             </div>
             <div className="text-center">
@@ -174,8 +240,9 @@ export default function EventDetailSheet({
              {!isChatOpen ? (
               <>
                 <div className="mt-3 text-sm text-gray-600">
-                  <p><span className="font-semibold">Uwer123:</span> Is any veggie left????</p>
-                  <p><span className="font-semibold">Temoc:</span> but going fast!</p>
+                  {messages.slice(-2).map((msg) => (
+                    <p key={msg.id}><span className="font-semibold">{msg.userName}:</span> {msg.text}</p>
+                  ))}
                 </div>
                 <button
                   onClick={() => setIsChatOpen(true)}
@@ -187,9 +254,9 @@ export default function EventDetailSheet({
             ) : (
               <>
                 <div className="mt-4 h-32 overflow-y-auto rounded-lg border bg-white p-2">
-                  <p className="text-sm text-gray-600"><span className="font-semibold">Uwer123:</span> Is any veggie left????</p>
-                  <p className="text-sm text-gray-600"><span className="font-semibold">Temoc:</span> but going fast!</p>
-                  <p className="text-sm text-gray-600"><span className="font-semibold">User88:</span> on my way!</p>
+                  {messages.map((msg) => (
+                    <p key={msg.id} className="text-sm text-gray-600"><span className="font-semibold">{msg.userName}:</span> {msg.text}</p>
+                  ))}
                 </div>
                 <form
                   onSubmit={handleChatSubmit}
@@ -226,7 +293,7 @@ export default function EventDetailSheet({
       </div>
 
       {/*  5. RENDER THE REPORT MODAL  */}
-\      <ReportModal
+      <ReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
       />

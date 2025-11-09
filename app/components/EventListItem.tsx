@@ -14,13 +14,16 @@ export type EventCategory =
   | string;
 
 export interface EventData {
+  id: string;
   title: string;
   category: EventCategory;
-  locationName: string;
+  location: string;
+  date: string;
   startTime: string;
   endTime: string;
-  coordinates: [number, number];
-  going: number;
+  coordinates?: [number, number];
+  going?: number;
+  creatorId?: string;
 }
 
 
@@ -30,10 +33,10 @@ interface EventListItemProps {
 }
 
 // getTimeStatus helper 
-const getTimeStatus = (startTime: string, endTime: string) => {
+const getTimeStatus = (date: string, startTime: string, endTime: string) => {
   const now = new Date();
-  const eventStart = new Date(startTime);
-  const eventEnd = new Date(endTime);
+  const eventStart = new Date(`${date}T${startTime}`);
+  const eventEnd = new Date(`${date}T${endTime}`);
 
   if (eventEnd < now) {
     return { text: "Event Ended", color: "text-gray-500" };
@@ -49,12 +52,14 @@ const getTimeStatus = (startTime: string, endTime: string) => {
 };
 
 export default function EventListItem({ event, onClick }: EventListItemProps) {
-  const timeStatus = getTimeStatus(event.startTime, event.endTime);
-  const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const timeStatus = getTimeStatus(event.date, event.startTime, event.endTime);
+  const formatTime = (time: string) => {
+    // time is already in HH:MM format, just need to convert to 12-hour format
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
   };
 
   return (
@@ -74,7 +79,7 @@ export default function EventListItem({ event, onClick }: EventListItemProps) {
       <h3 className="mt-3 text-lg font-bold text-gray-900">{event.title}</h3>
       <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
         <MapPinIcon className="h-4 w-4" />
-        <span>{event.locationName}</span>
+        <span>{event.location}</span>
       </div>
       <div className="mt-1 flex items-center gap-2 text-sm text-gray-600">
         <ClockIcon className="h-4 w-4" />
@@ -83,7 +88,7 @@ export default function EventListItem({ event, onClick }: EventListItemProps) {
         </span>
       </div>
       <p className="mt-3 text-sm font-medium text-gray-700">
-        {event.going} people are going
+        {event.going || 0} people are going
       </p>
     </button>
   );
