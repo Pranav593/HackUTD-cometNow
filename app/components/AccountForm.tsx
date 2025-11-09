@@ -1,26 +1,24 @@
 // app/components/AccountForm.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useAuth } from "@/lib/authContext";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { CheckIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
+import { UTD_MAJORS } from "@/lib/majors";
 
-const UTD_MAJORS = [
-  "Computer Science", "Software Engineering", "Business Administration",
-  "Marketing", "Finance", "Accounting", "Arts, Tech, & Emerging Comm.",
-  "Psychology", "Biology", "Neuroscience", "Mechanical Engineering",
-  "Electrical Engineering", "Biomedical Engineering", "History",
-  "Political Science", "Economics", "Healthcare Studies", "Physics",
-];
+// Imported from shared list
 
 export default function AccountForm() {
-  // --- MOCK DATA ---
-  const mockUser = {
-    name: "Temoc",
-    email: "temoc@utdallas.edu",
-  };
+  const { user, logout } = useAuth();
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [initialMajorLoaded, setInitialMajorLoaded] = useState(false);
 
   // --- FORM STATE ---
-  const [selectedMajor, setSelectedMajor] = useState("Computer Science");
+  const [selectedMajor, setSelectedMajor] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [notifySocial, setNotifySocial] = useState(true);
   const [notifyFood, setNotifyFood] = useState(true);
@@ -40,10 +38,44 @@ export default function AccountForm() {
     ).slice(0, 5); // Only show top 5 results
   }, [searchQuery]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      setEmail(user.email || "");
+      setName(user.displayName || "");
+      try {
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const data = snap.data() as any;
+          if (data.major) {
+            setSelectedMajor(data.major);
+            setInitialMajorLoaded(true);
+            setSearchQuery(data.major);
+          }
+          if (data.interests) {
+            setNotifySocial(Boolean(data.interests.social));
+            setNotifyFood(Boolean(data.interests.food));
+            setNotifyStudy(Boolean(data.interests.study));
+            setNotifyAcademic(Boolean(data.interests.academic));
+            setNotifyCareer(Boolean(data.interests.career));
+            setNotifyRecreation(Boolean(data.interests.recreation));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load user profile", err);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    loadProfile();
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const preferences = {
-      major: selectedMajor,
+    if (!user) return;
+    const payload = {
+      major: selectedMajor || null,
       interests: {
         social: notifySocial,
         food: notifyFood,
@@ -52,10 +84,18 @@ export default function AccountForm() {
         career: notifyCareer,
         recreation: notifyRecreation,
       },
+      name: name || null,
+      email: email || null,
+      updatedAt: new Date().toISOString(),
     };
-    console.log("Saving preferences:", preferences);
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
+    try {
+      await setDoc(doc(db, "users", user.uid), payload, { merge: true });
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save preferences", err);
+      alert("Failed to save. Please try again.");
+    }
   };
 
   return (
@@ -69,9 +109,10 @@ export default function AccountForm() {
             <input
               type="text"
               id="name"
-              value={mockUser.name}
-              disabled
-              className="mt-1 w-full rounded-md border-gray-200 bg-gray-100 px-4 py-3 text-gray-500"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+              className="mt-1 w-full rounded-md border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm focus:border-orange-500 focus:ring-orange-500"
             />
           </div>
           <div>
@@ -79,7 +120,7 @@ export default function AccountForm() {
             <input
               type="email"
               id="email"
-              value={mockUser.email}
+              value={email}
               disabled
               className="mt-1 w-full rounded-md border-gray-200 bg-gray-100 px-4 py-3 text-gray-500"
             />
@@ -174,7 +215,8 @@ export default function AccountForm() {
       </div>
 
       <button
-        type="button" 
+        type="button"
+        onClick={() => logout()}
         className="mt-4 w-full rounded-md bg-gray-200 px-4 py-3 text-lg font-semibold text-gray-700 hover:bg-gray-300"
       >
         Log Out

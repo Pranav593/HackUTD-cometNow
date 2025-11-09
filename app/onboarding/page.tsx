@@ -7,18 +7,7 @@ import { db } from '@/lib/firebase';
 
 const interestsList = ["Social", "Food", "Study", "Academic", "Career", "Recreation"];
 const years = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
-const majors = [
-  "Accounting", "Acting", "Aerospace Engineering", "African-American Studies", "American Studies", "Animation", "Anthropology", 
-  "Art History", "Arts, Technology, and Emerging Communication", "Biochemistry", "Biology", "Biomedical Engineering", 
-  "Business Administration", "Business Analytics", "Chemistry", "Child Learning and Development", "Cognitive Science", 
-  "Communication", "Computer Engineering", "Computer Science", "Criminology", "Data Science", "Economics", 
-  "Electrical Engineering", "Emerging Media and Communication", "Finance", "Geosciences", "Global Business", 
-  "Healthcare Management", "Historical Studies", "Information Technology and Systems", "Interdisciplinary Studies", 
-  "International Political Economy", "Literary Studies", "Marketing", "Mathematics", "Mechanical Engineering", 
-  "Molecular Biology", "Neuroscience", "Philosophy", "Physics", "Political Science", "Psychology", "Public Affairs", 
-  "Public Policy", "Software Engineering", "Sociology", "Speech, Language, and Hearing Sciences", "Supply Chain Management", 
-  "Visual and Performing Arts"
-];
+import { UTD_MAJORS } from '@/lib/majors';
 
 function OnboardingPage() {
   const router = useRouter();
@@ -116,7 +105,9 @@ function OnboardingPage() {
               required
             >
               <option value="" disabled>Select your major</option>
-              {majors.map(m => <option key={m} value={m}>{m}</option>)}
+              {UTD_MAJORS.map((m: string) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
             </select>
           </div>
 
