@@ -1,42 +1,65 @@
 [
   {
-    "title": "Free Pizza",
+    "title": "Market Vending",
     "category": "Food",
-    "locationName": "Student Union (SU)",
-    "startTime": "2025-11-08T17:00:00Z",
-    "endTime": "2025-11-08T18:00:00Z",
-    "coordinates": [32.9860, -96.7491]
+    "locationName": "Plinth",
+    "startTime": "2025-11-09T01:15:00Z",
+    "endTime": "2025-11-09T03:00:00Z",
+    "coordinates": [32.9858, -96.7504],
+    "going": 30
   },
   {
     "title": "Smash Bros Tournament",
-    "category": "Social",
+    "category": "Recreation",
     "locationName": "ECSW",
-    "startTime": "2025-11-08T18:00:00Z",
-    "endTime": "2025-11-08T20:00:00Z",
-    "coordinates": [32.9872, -96.7503]
+    "startTime": "2025-11-09T02:00:00Z",
+    "endTime": "2025-11-09T04:00:00Z",
+    "coordinates": [32.9872, -96.7503],
+    "going": 15
   },
   {
     "title": "A&P Study Group",
     "category": "Study",
     "locationName": "McDermott Library (MC)",
-    "startTime": "2025-11-08T16:00:00Z",
-    "endTime": "2025-11-08T17:30:00Z",
-    "coordinates": [32.9858, -96.7483]
+    "startTime": "2025-11-09T04:30:00Z",
+    "endTime": "2025-11-09T05:30:00Z",
+    "coordinates": [32.9858, -96.7483],
+    "going": 8
+  },
+  {
+    "title": "TI Company Talk",
+    "category": "Career",
+    "locationName": "ECSN 1.102",
+    "startTime": "2025-11-09T08:00:00Z",
+    "endTime": "2025-11-09T09:00:00Z",
+    "coordinates": [32.9861, -96.7510],
+    "going": 75
   },
   {
     "title": "ACM Meeting",
     "category": "Social",
-    "locationName": "ECSW",
-    "startTime": "2025-11-08T19:00:00Z",
-    "endTime": "2025-11-08T21:00:00Z",
-    "coordinates": [32.9873, -96.7504]
+    "locationName": "ECSW 1.315",
+    "startTime": "2025-11-09T05:00:00Z",
+    "endTime": "2025-11-09T06:00:00Z",
+    "coordinates": [32.9873, -96.7504],
+    "going": 45
   },
   {
-    "title": "Market Vending",
+    "title": "Physics Lecture",
+    "category": "Academic",
+    "locationName": "Founders Building (FO)",
+    "startTime": "2025-11-09T03:00:00Z",
+    "endTime": "2025-11-09T04:30:00Z",
+    "coordinates": [32.9876, -96.7490],
+    "going": 12
+  },
+  {
+    "title": "Morning Coffee (PAST)",
     "category": "Food",
-    "locationName": "Plinth",
-    "startTime": "2025-11-08T12:00:00Z",
-    "endTime": "2025-11-08T18:00:00Z",
-    "coordinates": [32.9858, -96.7504]
+    "locationName": "Student Union (SU)",
+    "startTime": "2025-11-08T14:00:00Z",
+    "endTime": "2025-11-08T15:00:00Z",
+    "coordinates": [32.9861, -96.7492],
+    "going": 50
   }
 ]

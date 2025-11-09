@@ -1,51 +1,81 @@
-// app/page.tsx
-"use client"; // <-- Make page.tsx a client component to manage state
+"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ClientMap from "@/app/components/ClientMap";
 import TopBar from "@/app/components/TopBar";
-import FilterBar from "@/app/components/FilterBar";
+import FilterBar, { MainFilter } from "@/app/components/FilterBar"; // Import MainFilter
 import BottomNav from "@/app/components/BottomNav";
 import DropPinButton from "@/app/components/DropPinButton";
 import DropPinForm from "@/app/components/DropPinForm";
-import EventDetailSheet from "@/app/components/EventDetailSheet"; // <-- 1. Import new sheet
-
-// Define EventData shape here so this page knows about it
-interface EventData {
-  title: string;
-  category: "Social" | "Food" | "Study" | "Academic" | "Career" | "Recreation" | "Other" | string;
-  locationName: string;
-  startTime: string;
-  endTime: string;
-  coordinates: [number, number];
-}
+import EventDetailSheet from "@/app/components/EventDetailSheet";
+import EventListView from "@/app/components/EventListView"; // Import List View
+import { EventData } from "@/app/components/EventListItem"; // Import the single source of truth
 
 export default function Home() {
+  // --- All app state now lives here ---
   const [isFormOpen, setIsFormOpen] = useState(false);
-  // --- 2. ADD STATE FOR THE SELECTED EVENT ---
   const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
+  const [isListViewOpen, setIsListViewOpen] = useState(false);
+  
+  // New state for new filters
+  const [activeFilter, setActiveFilter] = useState<MainFilter>("All");
+  const [selectedCategory, setSelectedCategory] = useState("All"); // "All" or an EventCategory
+  
+  const [allEvents, setAllEvents] = useState<EventData[]>([]);
+
+  // Fetch events ONCE when the page loads
+  useEffect(() => {
+    fetch("/mock-events.json")
+      .then((res) => res.json())
+      .then((data) => setAllEvents(data))
+      .catch((err) => console.error("Error fetching mock events:", err));
+  }, []);
+
+  // --- Handlers for the FilterBar ---
+  const handleFilterChange = (filter: MainFilter) => {
+    setActiveFilter(filter);
+    setIsListViewOpen(false); // Close list view if a map filter is clicked
+  };
+  
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    // When you pick a category, it makes sense to show "All" events in that category
+    setActiveFilter("All"); 
+    setIsListViewOpen(false);
+  };
+
+  const handleListViewClick = () => {
+    setIsListViewOpen(true);
+  };
 
   return (
     <main className="relative h-screen overflow-hidden">
-      {/* BLURRED CONTENT WHEN FORM OPEN */}
-  <div className={isFormOpen ? "relative h-full w-full blur-sm transition duration-200" : "relative h-full w-full transition duration-200"}>
-        {/* LAYER 0: THE MAP */}
-        <div className="absolute inset-0 z-0">
-          {/* 3. Pass the "setter" function down to the map */}
-          <ClientMap onPinClick={setSelectedEvent} />
+      {/* LAYER 0: THE MAP */}
+      <div className="absolute inset-0 z-0">
+        <ClientMap
+          onPinClick={setSelectedEvent}
+          events={allEvents}
+          activeFilter={activeFilter}
+          selectedCategory={selectedCategory}
+        />
+      </div>
+
+      {/* LAYER 1: THE UI */}
+      <div className="relative z-10 h-full w-full pointer-events-none">
+        <div className="pointer-events-auto">
+          <TopBar />
+          <FilterBar
+            activeFilter={activeFilter}
+            onFilterChange={handleFilterChange}
+            selectedCategory={selectedCategory}
+            onCategoryChange={handleCategoryChange}
+            onListViewClick={handleListViewClick}
+          />
         </div>
 
-        {/* LAYER 1: THE UI */}
-        <div className="relative z-10 h-full w-full pointer-events-none">
-          <div className="pointer-events-auto">
-            <TopBar />
-            <FilterBar />
-          </div>
-          
-          <div className="pointer-events-auto">
-            <DropPinButton onClick={() => setIsFormOpen(true)} />
-            <BottomNav />
-          </div>
+        <div className="pointer-events-auto">
+          <DropPinButton onClick={() => setIsFormOpen(true)} />
+          <BottomNav />
         </div>
       </div>
 
@@ -54,11 +84,14 @@ export default function Home() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
       />
-      
-      {/* 4. Add the new Event Detail Sheet */}
       <EventDetailSheet
         event={selectedEvent}
         onClose={() => setSelectedEvent(null)}
+      />
+      <EventListView
+        isOpen={isListViewOpen}
+        onClose={() => setIsListViewOpen(false)}
+        events={allEvents} // Pass all events to the list view
       />
     </main>
   );
