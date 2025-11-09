@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { AuthProvider } from '@/lib/authContext';
+import { RewardsProvider } from '@/lib/rewardsContext';
 import RouteGuard from './providers/RouteGuard';
 
 export const metadata: Metadata = {
@@ -36,7 +37,9 @@ export default function RootLayout({
       */}
       <body className="antialiased h-screen w-screen overflow-hidden">
         <AuthProvider>
-          <RouteGuard>{children}</RouteGuard>
+          <RewardsProvider>
+            <RouteGuard>{children}</RouteGuard>
+          </RewardsProvider>
         </AuthProvider>
       </body>
     </html>
