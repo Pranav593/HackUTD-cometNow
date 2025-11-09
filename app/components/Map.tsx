@@ -38,8 +38,9 @@ const invisibleIcon = L.divIcon({
   iconAnchor: [0, 0],
 });
 const UTD_COORDINATES: [number, number] = [32.9858, -96.7504];
-const UTD_BOUNDS: L.LatLngBoundsExpression = [ [32.980, -96.758], [32.995, -96.745] ];
-
+const UTD_BOUNDS: L.LatLngBoundsExpression = [
+  [32.950, -96.800],
+  [33.020, -96.700],];
 export default function Map({
   events,
   activeFilter,
