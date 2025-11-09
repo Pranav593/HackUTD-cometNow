@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { XMarkIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { containsInappropriateContent } from "../utils/content-filter";
 
 interface DropPinFormProps {
   isOpen: boolean;
@@ -40,16 +41,20 @@ function TimePicker({
     if (!el) return;
     const idx = Math.round(el.scrollTop / ITEM_H);
     const clamped = Math.max(0, Math.min(HOURS.length - 1, idx));
-    el.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
-    if (clamped !== hour) onChange(clamped, minute);
+    requestAnimationFrame(() => {
+      el.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
+      onChange(clamped, minute);
+    });
   };
   const finalizeMinuteScroll = () => {
     const el = minuteRef.current;
     if (!el) return;
     const idx = Math.round(el.scrollTop / ITEM_H);
     const clamped = Math.max(0, Math.min(MINUTES.length - 1, idx));
-    el.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
-    if (clamped !== minute) onChange(hour, clamped);
+    requestAnimationFrame(() => {
+      el.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
+      onChange(hour, clamped);
+    });
   };
   const handleHourScroll = () => {
     if (hourScrollTimeout.current) window.clearTimeout(hourScrollTimeout.current);
@@ -132,7 +137,8 @@ function TimePicker({
 
 export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
   const [description, setDescription] = useState("");
-  const [showInfo, setShowInfo] = useState(false); // <-- 1. ADD STATE
+  const [descriptionError, setDescriptionError] = useState<string>("");
+  const [showInfo, setShowInfo] = useState(false);
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState<string>("Other");
   // Keep year fixed to 2025; only allow editing month & day
@@ -201,7 +207,15 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-  const [mm, dd] = (dateMD || "").split("/");
+
+    // Check for inappropriate content
+    const { isInappropriate } = containsInappropriateContent(description);
+    if (isInappropriate) {
+      setDescriptionError("Please remove inappropriate content before submitting.");
+      return;
+    }
+
+    const [mm, dd] = (dateMD || "").split("/");
     const fullDate = mm && dd ? `${YEAR}-${mm}-${dd}` : "";
     // Minimal payload; parent can wire this to map or storage
     const payload = {
@@ -324,20 +338,20 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
               <label htmlFor="location" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Location
               </label>
-              <input
+              <select
                 id="location"
-                list="location-options"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Start typing or pick a place"
                 className="w-full rounded-md border border-gray-300 px-5 py-3 text-gray-900 shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 required
-              />
-              <datalist id="location-options">
+              >
+                <option value="">Select a location</option>
                 {locationOptions.map((name) => (
-                  <option key={name} value={name} />
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
                 ))}
-              </datalist>
+              </select>
             </div>
 
             {/* Date (Year fixed to 2025; editable MM/DD with backspace removing last digit) */}
@@ -353,14 +367,32 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
                   placeholder="MM/DD"
                   value={dateMD}
                   onChange={(e) => {
-                    // Accept digits only; format as MM/DD; cap length to 5 incl '/'
-                    const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
-                    const mm = digits.slice(0, 2);
-                    const dd = digits.slice(2, 4);
-                    const formatted = digits.length <= 2 ? mm : `${mm}/${dd}`;
-                    setDateMD(formatted);
+                    // Accept digits and forward slash; validate month/day values
+                    let value = e.target.value.replace(/[^\d\/]/g, '');
+                    
+                    // Handle backspace and deletion
+                    if (value.length < dateMD.length) {
+                      setDateMD(value);
+                      return;
+                    }
+
+                    // Auto-add slash after month if user types two digits
+                    if (value.length === 2 && !value.includes('/')) {
+                      value += '/';
+                    }
+
+                    // Validate month and day
+                    const [month, day] = value.split('/');
+                    if (month && parseInt(month) > 12) {
+                      return; // Don't update if month > 12
+                    }
+                    if (day && parseInt(day) > 31) {
+                      return; // Don't update if day > 31
+                    }
+
+                    setDateMD(value);
                   }}
-                  pattern="^\\d{2}\/\\d{2}$"
+                  pattern="\d{1,2}\/\d{1,2}"
                   className="w-full rounded-md border border-gray-300 px-5 py-3 text-gray-900 shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   required
                 />
