@@ -93,7 +93,7 @@ export default function Map() {
 
         return (
           <Marker
-            key={building.name} // Use new key
+            key={building.abbreviation} // Use new key
             position={coordsArray} // Use new parsed coordinates
             icon={invisibleIcon}
           >
@@ -102,7 +102,7 @@ export default function Map() {
               direction="center"
               className="utd-building-label"
             >
-              {building.name} {/* Use new key */}
+              {building.abbreviation} {/* Use new key */}
             </Tooltip>
           </Marker>
         );

@@ -94,13 +94,13 @@
       "abbreviation": "ECSN",
       "name": "Engineering and Computer Science North",
       "link": "https://www.google.com/maps/search/UTD+Engineering+and+Computer+Science+North/@32.9861265,-96.7509981,17z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.9861265,-96.7509981"
+      "coordinate": "32.986935543959376,-96.75043812704617"
     },
     {
       "abbreviation": "ECSS",
       "name": "Engineering and Computer Science South",
       "link": "https://www.google.com/maps/search/UTD+Engineering+and+Computer+Science+South/@32.986147,-96.7509276,17z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.986147,-96.7509276"
+      "coordinate": "32.986233337852156,-96.75048279060898"
     },
     {
       "abbreviation": "ECSW",
@@ -262,7 +262,7 @@
       "abbreviation": "SB",
       "name": "Service Building",
       "link": "https://www.google.com/maps/search/UTD+Service+Building/@32.9886048,-96.7508214,16z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.9886048,-96.7508214"
+      "coordinate": "32.99130624835321,-96.7463711644529"
     },
     {
       "abbreviation": "SG",
@@ -292,7 +292,7 @@
       "abbreviation": "SSA",
       "name": "Student Services Building Addition",
       "link": "https://www.google.com/maps/place/Student+Services+Building+Addition/@32.9860822,-96.7495635,17z/data=!3m1!4b1!4m6!3m5!1s0x864c21fffd1d451b:0x7d17ea7436b269eb!8m2!3d32.9860822!4d-96.7495635!16s%2Fg%2F1tdg_psf?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.9860822,-96.7495635"
+      "coordinate": "32.98590608527401,-96.74949413553688"
     },
     {
       "abbreviation": "SSB",
@@ -304,7 +304,7 @@
       "abbreviation": "SU",
       "name": "Student Union",
       "link": "https://www.google.com/maps/search/UTD+Student+Union/@32.9863605,-96.7492899,17z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.9863605,-96.7492899"
+      "coordinate": "32.98704961751097,-96.74882149560901"
     },
     {
       "abbreviation": "SUFC",
@@ -438,7 +438,7 @@
       "abbreviation": "P8A",
       "name": "Phase 8A (Buildings 61-63) + Leasing Office",
       "link": "https://www.google.com/maps/search/UTD+Phase+8A+(Buildings+61-63)+%2B+Leasing+Office/@32.9862551,-96.7516175,16z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.9862551,-96.7516175"
+      "coordinate": "32.98936173131868,-96.75547088632892"
     },
     {
       "abbreviation": "P9",
