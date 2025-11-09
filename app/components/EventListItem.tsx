@@ -26,9 +26,6 @@ export interface EventData {
   coordinates: [number, number];
   going?: number;
   creatorId?: string;
-  startAtUtc?: string; // ISO UTC timestamp
-  endAtUtc?: string;   // ISO UTC timestamp
-  expired?: boolean;   // Marked true once endAtUtc passed
 }
 
 
@@ -38,14 +35,10 @@ interface EventListItemProps {
 }
 
 // getTimeStatus helper 
-const getTimeStatus = (event: EventData) => {
+const getTimeStatus = (date: string, startTime: string, endTime: string) => {
   const now = new Date();
-  const eventStart = event.startAtUtc
-    ? new Date(event.startAtUtc)
-    : new Date(`${event.date}T${event.startTime}`);
-  const eventEnd = event.endAtUtc
-    ? new Date(event.endAtUtc)
-    : new Date(`${event.date}T${event.endTime}`);
+  const eventStart = new Date(`${date}T${startTime}`);
+  const eventEnd = new Date(`${date}T${endTime}`);
 
   if (eventEnd < now) {
     return { text: "Event Ended", color: "text-gray-500" };
@@ -61,7 +54,7 @@ const getTimeStatus = (event: EventData) => {
 };
 
 export default function EventListItem({ event, onClick }: EventListItemProps) {
-  const timeStatus = getTimeStatus(event);
+  const timeStatus = getTimeStatus(event.date, event.startTime, event.endTime);
   const formatTime = (time: string) => {
     // time is already in HH:MM format, just need to convert to 12-hour format
     const [hours, minutes] = time.split(':');

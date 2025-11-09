@@ -35,6 +35,7 @@ export default function EventListView({
       return hoursDiff <= 1 && eventEnd > now;
     });
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -56,6 +57,10 @@ export default function EventListView({
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+    // 2. Create "Trending" list
+  const trendingEvents = [...nowEvents].sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
+>>>>>>> parent of cafedcc (Add UTC time, expiration, and location to events)
 
     // 3. Group all events by category
     const categorizedEvents = events.reduce((acc, event) => {

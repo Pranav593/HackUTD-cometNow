@@ -1,6 +1,6 @@
 "use client";
 
-import { Marker, Tooltip } from "react-leaflet";
+import { Marker } from "react-leaflet";
 import L from "leaflet";
 import { EventData } from "./EventListItem"; // Import EventData
 
@@ -15,37 +15,33 @@ const ICONS = {
 };
 
 
-const getPinStyle = (event: EventData) => {
+const getPinStyle = (startTime: string, endTime: string) => {
   const now = new Date();
-  const eventStart = event.startAtUtc
-    ? new Date(event.startAtUtc)
-    : new Date(`${event.date}T${event.startTime}`);
-  const eventEnd = event.endAtUtc
-    ? new Date(event.endAtUtc)
-    : new Date(`${event.date}T${event.endTime}`);
+  const eventStart = new Date(startTime);
+  const eventEnd = new Date(endTime);
   
   const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 text-white" fill="currentColor"><path d="${ICONS.bolt}" /></svg>`;
   
-  // Coloring rule: green if happening now or starting within 1 hour; grey for future beyond 1 hour; orange if past.
+  // 1. Check for "Past" first. 
   if (eventEnd < now) {
-    return { bgColor: "bg-orange-600", iconHtml }; // past
+    return { bgColor: "bg-orange-600", iconHtml }; // "Past" is Orange
   }
+
+  // If it's not past, check for future events
   const hoursDiff = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
-  if (hoursDiff <= 1) {
-    return { bgColor: "bg-green-600", iconHtml };
+
+  if (hoursDiff <= 1) { // 1 hour threshold for "Now"
+    return { bgColor: "bg-green-600", iconHtml }; // "Now" is Green
+  } else if (hoursDiff <= 3) {
+    return { bgColor: "bg-orange-500", iconHtml }; // "Soon" is light Orange
+  } else {
+    return { bgColor: "bg-red-500", iconHtml }; // "Later" is Red
   }
-  return { bgColor: "bg-gray-400", iconHtml };
 };
 
 export default function EventPin({ event, onPinClick }: EventPinProps) {
-  // Skip rendering if coordinates are missing
-  if (!event.coordinates || event.coordinates[0] === 0) {
-    // Provide debug visibility when coordinates are missing or default
-    try { console.warn('[EventPin] Skipping pin due to missing/zero coordinates', event.title, event.coordinates); } catch {}
-    return null;
-  }
-
-  const { bgColor, iconHtml } = getPinStyle(event);
+  
+  const { bgColor, iconHtml } = getPinStyle(event.startTime, event.endTime);
 
   const customIcon = L.divIcon({
     className: "custom-pin",
@@ -70,10 +66,6 @@ export default function EventPin({ event, onPinClick }: EventPinProps) {
           onPinClick(event);
         },
       }}
-    >
-      <Tooltip direction="top" offset={[0, -10]} opacity={0.9}>
-        <span className="text-xs font-semibold">{event.title}</span>
-      </Tooltip>
-    </Marker>
+    />
   );
 }

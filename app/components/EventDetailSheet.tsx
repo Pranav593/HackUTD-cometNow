@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import {
   XMarkIcon,
   InformationCircleIcon,
@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/authContext";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot, orderBy } from "firebase/firestore";
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -27,6 +28,9 @@ import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDo
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+// Use the unified EventData definition
+>>>>>>> parent of cafedcc (Add UTC time, expiration, and location to events)
 import { EventData } from "./EventListItem";
 
 interface ChatMessage {

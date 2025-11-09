@@ -51,18 +51,18 @@ export default function Map({
       .catch((err) => console.error("Error fetching building data:", err));
   }, []);
 
-  // Filtering Logic
+  // Filtering Logic (unchanged)
   const filteredEvents = useMemo(() => {
     const now = new Date();
     let eventsToShow = [...events];
 
-    // Helper to parse event end datetime safely
-    const getEventEnd = (e: EventData) => e.endAtUtc ? new Date(e.endAtUtc) : new Date(`${e.date}T${e.endTime}`);
-
     if (activeFilter === "Past") {
-      eventsToShow = eventsToShow.filter((event) => getEventEnd(event) < now);
+      eventsToShow = eventsToShow.filter(
+        (event) => new Date(event.endTime) < now
+      );
     } else if (activeFilter === "Recommended") {
       eventsToShow = eventsToShow
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -73,9 +73,14 @@ export default function Map({
 =======
         .filter((event) => getEventEnd(event) >= now)
 >>>>>>> Stashed changes
+=======
+        .filter((event) => new Date(event.endTime) >= now)
+>>>>>>> parent of cafedcc (Add UTC time, expiration, and location to events)
         .sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
     } else {
-      eventsToShow = eventsToShow.filter((event) => getEventEnd(event) >= now);
+      eventsToShow = eventsToShow.filter(
+        (event) => new Date(event.endTime) >= now
+      );
     }
 
     if (selectedCategories.length > 0) {
@@ -90,6 +95,7 @@ export default function Map({
 >>>>>>> Stashed changes
     }
 
+<<<<<<< HEAD
     // Exclude expired=true for safety
     eventsToShow = eventsToShow.filter(e => !e.expired);
 
@@ -113,6 +119,8 @@ export default function Map({
 
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> parent of cafedcc (Add UTC time, expiration, and location to events)
     return eventsToShow;
   }, [events, activeFilter, selectedCategories]);
 

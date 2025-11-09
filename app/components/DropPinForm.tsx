@@ -2,28 +2,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { EventData } from "./EventListItem";
 import { XMarkIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { containsInappropriateContent } from "../utils/content-filter";
 import { collection, addDoc, updateDoc } from "firebase/firestore";
-import { toZonedTime } from 'date-fns-tz';
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/authContext";
 
 interface DropPinFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreated?: (event: EventData) => void;
 }
 
-export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormProps) {
+export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
   const [description, setDescription] = useState("");
   const [descriptionError, setDescriptionError] = useState<string>("");
-  const [formError, setFormError] = useState<string>("");
   const [showInfo, setShowInfo] = useState(false);
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState<string>("Other");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   // Keep year fixed to 2025; only allow editing month & day
   const YEAR = "2025";
   const [dateMD, setDateMD] = useState(""); // format MM-DD
@@ -36,8 +31,7 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
 
   const resetForm = () => {
     setDescription("");
-  setDescriptionError("");
-  setFormError("");
+    setDescriptionError("");
     setLocation("");
     setCategory("Other");
     setDateMD("");
@@ -68,11 +62,10 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
           seen.add(n);
           return true;
         });
-  console.log("[DropPinForm] Loaded location options:", unique.length);
         setLocationOptions(unique);
       } catch (e) {
         // Silently ignore; allow free-text entry
-        console.error("[DropPinForm] Failed to load location options", e);
+        console.error("Failed to load location options", e);
       }
     };
     loadLocations();
@@ -90,56 +83,13 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
     }
   };
 
-  // Lightweight cache for location data to avoid refetching inside submit
-  const [locationData, setLocationData] = useState<any | null>(null);
-
-  useEffect(() => {
-    // Preload enriched locations for lookup
-    fetch("/enriched_locations.json")
-      .then(r => r.json())
-      .then(data => {
-        setLocationData(data);
-  console.log("[DropPinForm] Preloaded enriched_locations.json");
-      })
-      .catch((err) => {
-        console.warn("[DropPinForm] Could not preload enriched_locations.json", err);
-      });
-  }, []);
-
-  const lookupCoordinates = (locName: string): [number, number] | null => {
-    if (!locationData) return null;
-    const pools: any[] = [
-      ...(Array.isArray(locationData.buildings) ? locationData.buildings : []),
-      ...(Array.isArray(locationData.university_housing) ? locationData.university_housing : []),
-    ];
-    // Exact name match first
-    let match = pools.find(b => b.name === locName);
-    if (!match) {
-      // Case-insensitive name match
-      match = pools.find(b => typeof b.name === 'string' && b.name.toLowerCase() === locName.toLowerCase());
-    }
-    if (!match) {
-      // Try abbreviation containment (user may type abbreviation)
-      match = pools.find(b => typeof b.abbreviation === 'string' && b.abbreviation.toLowerCase() === locName.toLowerCase());
-    }
-    if (!match || !match.coordinate) return null;
-    const parts = String(match.coordinate).split(',').map(Number);
-    if (parts.length !== 2 || parts.some(isNaN)) return null;
-    return [parts[0], parts[1]];
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-  console.log("[DropPinForm] handleSubmit start");
 
     // Check for inappropriate content
     const { isInappropriate } = containsInappropriateContent(description);
     if (isInappropriate) {
       setDescriptionError("Please remove inappropriate content before submitting.");
-      console.warn("[DropPinForm] Content flagged as inappropriate");
-      setIsSubmitting(false);
       return;
     }
 
@@ -160,71 +110,7 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
     };
 
     if (!user) {
-      console.error("[DropPinForm] User not authenticated");
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Ensure location data is available, fetch inline if not yet loaded
-    let coords = lookupCoordinates(location);
-    if (!coords) {
-      try {
-        if (!locationData) {
-          console.log("[DropPinForm] Loading locations inline for lookup...");
-          const res = await fetch("/enriched_locations.json");
-          const data = await res.json();
-          setLocationData(data);
-        }
-        coords = lookupCoordinates(location);
-      } catch (err) {
-        console.warn("[DropPinForm] Inline location load failed", err);
-      }
-    }
-    if (!coords) {
-      console.warn("[DropPinForm] Could not resolve coordinates for:", location, "- defaulting to [0,0]");
-      coords = [0, 0];
-    }
-
-    // Build UTC timestamps
-    let startAtUtc: string | undefined;
-    let endAtUtc: string | undefined;
-    if (fullDate) {
-      // Convert naive local Dallas time to UTC manually (date-fns-tz helper fallback)
-      const toUtcFromDallas = (hhmm: string) => {
-        const base = new Date(`${fullDate}T${hhmm}:00`); // interpreted in local runtime TZ
-        // Adjust if runtime TZ differs from Dallas by deriving Dallas zoned time then diff
-  const zonedDallas = toZonedTime(base, 'America/Chicago');
-        // We want the wall-clock time in Dallas as UTC: construct UTC using its components
-        const utcDate = new Date(Date.UTC(
-          zonedDallas.getFullYear(),
-          zonedDallas.getMonth(),
-          zonedDallas.getDate(),
-          zonedDallas.getHours(),
-          zonedDallas.getMinutes(),
-          0, 0
-        ));
-        return utcDate.toISOString();
-      };
-      startAtUtc = toUtcFromDallas(to24Hour(startTime, startTimeAmPm));
-      endAtUtc = toUtcFromDallas(to24Hour(endTime, endTimeAmPm));
-    }
-
-    // Prevent past scheduling (startAt must be in future by at least 1 minute)
-    if (startAtUtc) {
-      const startMs = Date.parse(startAtUtc);
-      const nowMs = Date.now();
-      if (startMs < nowMs - 30_000) { // allow slight clock drift
-        console.warn('[DropPinForm] Attempted to schedule event in the past');
-        setFormError('Start time is in the past.');
-        setIsSubmitting(false);
-        return;
-      }
-    }
-
-    if (startAtUtc && endAtUtc && Date.parse(endAtUtc) <= Date.parse(startAtUtc)) {
-      console.warn('[DropPinForm] End time must be after start time');
-      setFormError('End time must be after start time.');
-      setIsSubmitting(false);
+      console.error("User not authenticated");
       return;
     }
 
@@ -238,37 +124,19 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
       endTime: to24Hour(endTime, endTimeAmPm), // HH:MM (24h)
       creatorId: user.uid,
       going: 1, // Initialize with 1 (the creator)
-      coordinates: coords, // Resolved from enriched_locations.json
-      startAtUtc,
-      endAtUtc,
-      expired: false,
+      coordinates: [0, 0], // Default coordinates, you might want to add actual location selection
     };
-  console.log("[DropPinForm] Payload ready:", payload);
+    console.log("Submitting:", payload);
     try {
-      const coll = collection(db, "events");
-  console.log("[DropPinForm] Adding document to 'events'...");
-      const docRef = await addDoc(coll, payload);
-  console.log("[DropPinForm] addDoc success, id:", docRef.id);
-
-      const created: EventData = { ...payload, id: docRef.id } as EventData;
-      // Optimistically update parent before updateDoc to avoid UI feeling stuck
-      onCreated?.(created);
-
-      try {
-        await updateDoc(docRef, { id: docRef.id });
-        console.log("[DropPinForm] updateDoc(id) success");
-      } catch (updErr) {
-        console.warn("[DropPinForm] updateDoc(id) failed — proceeding anyway", updErr);
-      }
-
+      const docRef = await addDoc(collection(db, "events"), payload);
+      // Update the document with its ID
+      await updateDoc(docRef, { id: docRef.id });
+      console.log("Document written with ID: ", docRef.id);
       onClose(); // Close form on successful submission
       resetForm();
     } catch (error) {
-      console.error("[DropPinForm] Error adding document:", error);
-      setFormError('Failed to save event. Please retry.');
-    } finally {
-      setIsSubmitting(false);
-  console.log("[DropPinForm] handleSubmit end");
+      console.error("Error adding document: ", error);
+      // Optionally, show an error to the user
     }
   };
 
@@ -322,11 +190,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
           </h1>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {formError && (
-              <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {formError}
-              </div>
-            )}
             {/* Description */}
             <div className="relative">
               {showInfo && (
@@ -536,14 +399,9 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting}
-              className={`w-full rounded-md px-5 py-3 text-lg font-semibold text-white shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
-                isSubmitting
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700 focus:ring-green-500"
-              }`}
+              className="w-full rounded-md bg-green-600 px-5 py-3 text-lg font-semibold text-white shadow-md transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
-              {isSubmitting ? "Submitting..." : "Drop Pin!"}
+              Drop Pin!
             </button>
           </form>
         </div>
