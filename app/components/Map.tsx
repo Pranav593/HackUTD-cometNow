@@ -23,7 +23,7 @@ interface MapProps {
   onPinClick: (event: EventData) => void;
 }
 
-// Constants (unchanged)
+// Constants 
 const invisibleIcon = L.divIcon({
   className: "invisible-icon",
   iconSize: [0, 0],
@@ -40,7 +40,7 @@ export default function Map({
 }: MapProps) {
   const [buildings, setBuildings] = useState<Building[]>([]);
 
-  // Fetch building data (unchanged)
+  // Fetch building data 
   useEffect(() => {
     fetch("/enriched_locations.json")
       .then((res) => res.json())
@@ -82,7 +82,7 @@ export default function Map({
   return (
     <MapContainer
       center={UTD_COORDINATES}
-      zoom={15}
+      zoom={17}
       style={{ height: "100%", width: "100%" }}
       maxBounds={UTD_BOUNDS}
       minZoom={14}
@@ -91,13 +91,13 @@ export default function Map({
       scrollWheelZoom={true}
     >
       
-      {/* Tile Layer (unchanged) */}
+      {/* Tile Layer  */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
       
-      {/* LAYER 2: Building Labels (unchanged) */}
+      {/* LAYER 2: Building Labels  */}
       {buildings.map((building) => {
         const coordsArray = building.coordinate.split(",").map(Number) as [number, number];
         if (isNaN(coordsArray[0]) || isNaN(coordsArray[1])) return null;
