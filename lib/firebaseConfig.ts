@@ -1,2 +1,4 @@
-// Deprecated: Use auth from lib/firebase instead. This file remains for compatibility if imported elsewhere.
+/**
+ * Deprecated: Re-export for compatibility. Prefer importing from `lib/firebase`.
+ */
 export { auth } from './firebase';

@@ -1,3 +1,7 @@
+/**
+ * GET /api/test-gemini
+ * Basic greeting generation to verify Gemini model access.
+ */
 import { NextApiRequest, NextApiResponse } from 'next';
 import genAI from '@/lib/gemini';
 
@@ -8,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    const prompt = 'You are a helpful student advisor at UTD. Say "Hello! I am ready to help UTD students!" to test the connection.';
+    const prompt = 'You are a helpful student advisor at UTD. Say "Hello! I am ready to help UTD students!"';
     
     const result = await model.generateContent(prompt);
     const response = await result.response;

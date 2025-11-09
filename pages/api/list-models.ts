@@ -1,3 +1,7 @@
+/**
+ * GET /api/list-models
+ * Returns available Google Generative Language models via REST.
+ */
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
