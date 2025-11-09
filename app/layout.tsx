@@ -1,7 +1,6 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import AuthProvider from './providers/AuthProvider';
 import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
@@ -30,9 +29,11 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
+      {/*
+       
+      */}
       <body className="antialiased h-screen w-screen overflow-hidden">
-        <AuthProvider>{children}</AuthProvider>
-      </body>
+        {children}
       </body>
     </html>
   );
