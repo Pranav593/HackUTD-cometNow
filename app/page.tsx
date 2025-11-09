@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import ClientMap from "@/app/components/ClientMap";
 import TopBar from "@/app/components/TopBar";
-import FilterBar, { MainFilter } from "@/app/components/FilterBar"; // Import MainFilter
+import FilterBar, { MainFilter } from "@/app/components/FilterBar"; 
 import BottomNav from "@/app/components/BottomNav";
 import DropPinButton from "@/app/components/DropPinButton";
 import DropPinForm from "@/app/components/DropPinForm";
 import EventDetailSheet from "@/app/components/EventDetailSheet";
-import EventListView from "@/app/components/EventListView"; // Import List View
-import { EventData } from "@/app/components/EventListItem"; // Import the single source of truth
+import EventListView from "@/app/components/EventListView"; 
+import { EventData } from "@/app/components/EventListItem"; 
 
 export default function Home() {
   // --- All app state now lives here ---

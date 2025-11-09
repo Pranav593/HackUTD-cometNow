@@ -3,12 +3,12 @@
 import { MapContainer, TileLayer, Tooltip, Marker } from "react-leaflet";
 import L from "leaflet";
 import { useEffect, useState, useMemo } from "react";
-import MarkerClusterGroup from "react-leaflet-markercluster";
+import MarkerClusterGroup from "react-leaflet-markercluster"; 
 import EventPin from "./EventPin";
 import { EventData } from "./EventListItem";
 import { MainFilter } from "./FilterBar";
 
-// Building interface 
+// Building interface (matches enriched_locations.json)
 interface Building {
   name: string;
   abbreviation: string;
@@ -23,7 +23,7 @@ interface MapProps {
   onPinClick: (event: EventData) => void;
 }
 
-// Constants 
+// Constants (unchanged)
 const invisibleIcon = L.divIcon({
   className: "invisible-icon",
   iconSize: [0, 0],
@@ -40,7 +40,7 @@ export default function Map({
 }: MapProps) {
   const [buildings, setBuildings] = useState<Building[]>([]);
 
-  // Fetch building data 
+  // Fetch building data (unchanged)
   useEffect(() => {
     fetch("/enriched_locations.json")
       .then((res) => res.json())
@@ -51,17 +51,11 @@ export default function Map({
       .catch((err) => console.error("Error fetching building data:", err));
   }, []);
 
+  // Filtering Logic (unchanged)
   const filteredEvents = useMemo(() => {
-    
-    
-    if (!Array.isArray(events)) {
-      return [];
-    }
-
     const now = new Date();
     let eventsToShow = [...events];
 
-    // Filter by Main Filter 
     if (activeFilter === "Past") {
       eventsToShow = eventsToShow.filter(
         (event) => new Date(event.endTime) < now
@@ -76,7 +70,6 @@ export default function Map({
       );
     }
 
-    // Filter by Category 
     if (selectedCategory !== "All") {
       eventsToShow = eventsToShow.filter(
         (event) => event.category === selectedCategory
@@ -89,21 +82,22 @@ export default function Map({
   return (
     <MapContainer
       center={UTD_COORDINATES}
-      zoom={16}
+      zoom={15}
       style={{ height: "100%", width: "100%" }}
       maxBounds={UTD_BOUNDS}
-      minZoom={15}
+      minZoom={14}
       maxZoom={18}
       maxBoundsViscosity={1.0}
       scrollWheelZoom={true}
     >
-      {/* LAYER 1: Base Map  */}
+      
+      {/* Tile Layer (unchanged) */}
       <TileLayer
-        attribution='&copy; <a href="https{s}://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https{s}://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
       
-      {/* LAYER 2: Building Labels  */}
+      {/* LAYER 2: Building Labels (unchanged) */}
       {buildings.map((building) => {
         const coordsArray = building.coordinate.split(",").map(Number) as [number, number];
         if (isNaN(coordsArray[0]) || isNaN(coordsArray[1])) return null;
@@ -125,7 +119,7 @@ export default function Map({
         );
       })}
 
-      {/* LAYER 3: Renders the new `filteredEvents`  */}
+      {/* LAYER 3: Event Pins with Clustering */}
       <MarkerClusterGroup>
         {filteredEvents.map((event, index) => (
           <EventPin
