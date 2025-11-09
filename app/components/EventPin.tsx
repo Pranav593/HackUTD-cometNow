@@ -7,7 +7,7 @@ import L from "leaflet";
 // Define the shape of your event data
 interface EventData {
   title: string;
-  category: "Food" | "Social" | "Study" | string;
+  category: "Social" | "Food" | "Study" | "Academic"| "Career"|" Recreation" | "Other" | string;
   locationName: string;
   startTime: string;
   endTime: string;
@@ -45,7 +45,6 @@ const getPinStyle = (startTime: string) => {
 
   return { bgColor, iconHtml };
 };
-// -----------------------------
 
 export default function EventPin({ event, onPinClick }: EventPinProps) {
   const { bgColor, iconHtml } = getPinStyle(event.startTime);
