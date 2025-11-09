@@ -8,6 +8,7 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
+import { useRewards } from "@/lib/rewardsContext";
 
 // --- NEW COMPONENT: Dynamic Points Bar ---
 const PointsBar = ({ currentPoints, maxPoints = 1000 }: { currentPoints: number, maxPoints?: number }) => {
@@ -50,17 +51,12 @@ const RAFFLE = {
 };
 
 export default function RewardsPage() {
-  // Renamed the state for clarity
-  const [currentPoints, setCurrentPoints] = useState(100); 
-  const [ticketsBought, setTicketsBought] = useState(0);
+  const { points, spendPoints, tickets, addTickets } = useRewards();
 
   const handleBuyTicket = () => {
-    if (currentPoints >= RAFFLE.cost) {
-      setCurrentPoints(currentPoints - RAFFLE.cost);
-      setTicketsBought(ticketsBought + 1);
-    } else {
-      alert("Not enough Points!");
-    }
+    const ok = spendPoints(RAFFLE.cost);
+    if (ok) addTickets(1);
+    else alert("Not enough Points!");
   };
 
   return (
@@ -76,9 +72,9 @@ export default function RewardsPage() {
             Current Balance:
           </span>
           <h1 className="flex items-center text-3xl font-bold text-gray-900">
-            {currentPoints} Points
+            {points} Points
           </h1>
-          <PointsBar currentPoints={currentPoints} />
+          <PointsBar currentPoints={points} />
         </div>
 
         {/* --- Raffle Card --- */}
@@ -100,20 +96,20 @@ export default function RewardsPage() {
           
           <div className="mt-4 text-sm text-gray-700">
             <p className="font-medium">
-              You currently hold: <span className="font-bold text-orange-600">{ticketsBought} Tickets</span>
+              You currently hold: <span className="font-bold text-orange-600">{tickets} Tickets</span>
             </p>
           </div>
 
           <button
             onClick={handleBuyTicket}
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-lg font-semibold text-white shadow-md transition-colors hover:bg-green-700 disabled:bg-gray-400"
-            disabled={currentPoints < RAFFLE.cost}
+            disabled={points < RAFFLE.cost}
           >
             Buy Ticket - {RAFFLE.cost} Points/each
             <InformationCircleIcon className="h-5 w-5" />
           </button>
           
-          {currentPoints < RAFFLE.cost && (
+          {points < RAFFLE.cost && (
             <p className="mt-2 text-center text-sm text-red-600">
               Insufficient Points.
             </p>

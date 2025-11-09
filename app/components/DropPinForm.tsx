@@ -6,9 +6,10 @@ import { EventData } from "./EventListItem";
 import { XMarkIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { containsInappropriateContent } from "../utils/content-filter";
 import { collection, addDoc, updateDoc } from "firebase/firestore";
-import { toZonedTime } from 'date-fns-tz';
+import { fromZonedTime } from 'date-fns-tz';
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/authContext";
+import { useRewards } from "@/lib/rewardsContext";
 
 interface DropPinFormProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
   const [endTimeAmPm, setEndTimeAmPm] = useState<"AM" | "PM">("AM");
   const [locationOptions, setLocationOptions] = useState<string[]>([]);
   const { user } = useAuth();
+  const { awardEventCreation } = useRewards();
 
   const resetForm = () => {
     setDescription("");
@@ -189,22 +191,9 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
     let startAtUtc: string | undefined;
     let endAtUtc: string | undefined;
     if (fullDate) {
-      // Convert naive local Dallas time to UTC manually (date-fns-tz helper fallback)
-      const toUtcFromDallas = (hhmm: string) => {
-        const base = new Date(`${fullDate}T${hhmm}:00`); // interpreted in local runtime TZ
-        // Adjust if runtime TZ differs from Dallas by deriving Dallas zoned time then diff
-  const zonedDallas = toZonedTime(base, 'America/Chicago');
-        // We want the wall-clock time in Dallas as UTC: construct UTC using its components
-        const utcDate = new Date(Date.UTC(
-          zonedDallas.getFullYear(),
-          zonedDallas.getMonth(),
-          zonedDallas.getDate(),
-          zonedDallas.getHours(),
-          zonedDallas.getMinutes(),
-          0, 0
-        ));
-        return utcDate.toISOString();
-      };
+      // Convert Dallas wall-clock time to UTC correctly regardless of client timezone
+      const toUtcFromDallas = (hhmm: string) =>
+        fromZonedTime(`${fullDate}T${hhmm}:00`, 'America/Chicago').toISOString();
       startAtUtc = toUtcFromDallas(to24Hour(startTime, startTimeAmPm));
       endAtUtc = toUtcFromDallas(to24Hour(endTime, endTimeAmPm));
     }
@@ -261,7 +250,10 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
         console.warn("[DropPinForm] updateDoc(id) failed — proceeding anyway", updErr);
       }
 
-      onClose(); // Close form on successful submission
+  // Award points for event creation (hardcoded +25)
+  try { awardEventCreation(); } catch (e) { console.warn('[Rewards] event creation award failed', e); }
+
+  onClose(); // Close form on successful submission
       resetForm();
     } catch (error) {
       console.error("[DropPinForm] Error adding document:", error);

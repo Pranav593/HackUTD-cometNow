@@ -16,6 +16,7 @@ import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import ReportModal from "./ReportModal";
 import { EventData } from "./EventListItem"; // Clean import of EventData
+import { useRewards } from "@/lib/rewardsContext";
 
 // Use EventData from EventListItem to avoid type conflicts
 
@@ -94,6 +95,7 @@ export default function EventDetailSheet({
   
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { awardChatPoints } = useRewards();
   
   const [goingCount, setGoingCount] = useState(event?.going || 0);
   const [isGoing, setIsGoing] = useState(false);
@@ -211,7 +213,7 @@ export default function EventDetailSheet({
 
 
   // --- CHAT SUBMISSION LOGIC ---
-  const handleChatSubmit = async (e: React.FormEvent) => {
+  const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatMessage || !user || !event) return;
 
@@ -224,7 +226,20 @@ export default function EventDetailSheet({
       timestamp: serverTimestamp(), // Use server time for accurate sorting
     });
 
-    setChatMessage("");
+    setChatMessage("");
+
+    // Attempt to award chat points (10 pts every 10 minutes)
+    try {
+      const { awarded, nextEligibleAt } = awardChatPoints();
+      if (awarded) {
+        // Simple inline feedback; could be replaced by toast system later
+        console.log('[Rewards] Chat points awarded (+10). Next at:', new Date(nextEligibleAt).toLocaleTimeString());
+      } else {
+        console.log('[Rewards] Chat points cooldown active. Next eligible at:', new Date(nextEligibleAt).toLocaleTimeString());
+      }
+    } catch (err) {
+      console.warn('[Rewards] Failed to award chat points', err);
+    }
   };
   // --- END CHAT SUBMISSION LOGIC ---
 
