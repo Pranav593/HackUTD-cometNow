@@ -57,7 +57,7 @@ export default function Map({
       .catch((err) => console.error("Error fetching building data:", err));
   }, []);
 
-  // Filtering Logic (FIXED and CLEANED)
+  // Filtering Logic (unchanged)
   const filteredEvents = useMemo(() => {
     const now = new Date();
     let eventsToShow = [...events];
@@ -74,7 +74,12 @@ export default function Map({
         .filter((event) => new Date(event.endTime) >= now)
         .sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
     } else {
-      // 'Upcoming' or default: Show only future events
+      eventsToShow = eventsToShow.filter(
+        (event) => new Date(event.endTime) >= now
+      );
+    }
+
+    if (selectedCategories.length > 0) {
       eventsToShow = eventsToShow.filter(
         (event) => new Date(event.endTime) >= now
       );
