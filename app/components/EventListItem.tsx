@@ -13,15 +13,17 @@ export type EventCategory =
   | "Other"
   | string;
 
+// Unified EventData interface – coordinates are required everywhere we use an event.
+// If some legacy documents are missing coordinates, callers should normalize them when loading.
 export interface EventData {
   id: string;
   title: string;
   category: EventCategory;
   location: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  coordinates?: [number, number];
+  date: string;          // YYYY-MM-DD
+  startTime: string;     // HH:MM 24h
+  endTime: string;       // HH:MM 24h
+  coordinates: [number, number];
   going?: number;
   creatorId?: string;
 }

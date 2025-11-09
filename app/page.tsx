@@ -33,10 +33,29 @@ export default function Home() {
     const fetchEvents = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "events"));
-        const events = querySnapshot.docs.map(doc => ({
-          ...doc.data(),
-          id: doc.id,
-        })) as EventData[];
+        const events = querySnapshot.docs.map(doc => {
+          const data = doc.data() as any;
+          // Normalize coordinates: ensure we always have a tuple.
+          let coordinates: [number, number] = [0, 0];
+          if (Array.isArray(data.coordinates) && data.coordinates.length === 2) {
+            const [lat, lng] = data.coordinates;
+            if (typeof lat === 'number' && typeof lng === 'number') {
+              coordinates = [lat, lng];
+            }
+          }
+          return {
+            id: doc.id,
+            title: data.title || 'Untitled',
+            category: data.category || 'Other',
+            location: data.location || 'Unknown',
+            date: data.date || '',
+            startTime: data.startTime || '00:00',
+            endTime: data.endTime || '00:00',
+            coordinates,
+            going: data.going || 0,
+            creatorId: data.creatorId,
+          } as EventData;
+        });
         setAllEvents(events);
       } catch (err) {
         console.error("Error fetching events:", err)

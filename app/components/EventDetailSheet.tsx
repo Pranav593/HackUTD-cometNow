@@ -17,17 +17,8 @@ import { useAuth } from "@/lib/authContext";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot, orderBy } from "firebase/firestore";
 
-interface EventData {
-  [x: string]: ReactNode;
-  id: any;
-  title: string;
-  category: "Food" | "Social" | "Study" | string;
-  locationName: string;
-  startTime: string;
-  endTime: string;
-  coordinates: [number, number];
-  going?: number;
-}
+// Use the unified EventData definition
+import { EventData } from "./EventListItem";
 
 interface ChatMessage {
   id: string;

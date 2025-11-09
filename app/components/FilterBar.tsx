@@ -15,15 +15,15 @@ const categories: EventCategory[] = [
   "Other",
 ];
 
-export type MainFilter = "All" | "Recommended" | "Attending" | "Past";
+export type MainFilter = "All" | "Recommended" | "Going" | "Past";
 
 interface FilterBarProps {
   // Main filters
   activeFilter: MainFilter;
   onFilterChange: (filter: MainFilter) => void;
   // Category filter
-  selectedCategory: string;
-  onCategoryChange: (category: string) => void;
+  selectedCategories: string[];
+  onCategoryChange: (categories: string[]) => void;
   // List view
   onListViewClick: () => void;
 }
@@ -31,13 +31,22 @@ interface FilterBarProps {
 export default function FilterBar({
   activeFilter,
   onFilterChange,
-  selectedCategory,
+  selectedCategories,
   onCategoryChange,
   onListViewClick,
 }: FilterBarProps) {
   
-  const isAllButtonActive = activeFilter === "All" && selectedCategory === "All";
-  const isCategoryActive = selectedCategory !== "All";
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+
+  const handleCategoryCheckboxChange = (category: string) => {
+    const newCategories = selectedCategories.includes(category)
+      ? selectedCategories.filter((c) => c !== category)
+      : [...selectedCategories, category];
+    onCategoryChange(newCategories);
+  };
+
+  const isAllButtonActive = activeFilter === "All" && selectedCategories.length === 0;
+  const isCategoryActive = selectedCategories.length > 0;
 
   // A helper sub-component for the main filter buttons
   const FilterButton = ({
@@ -66,7 +75,10 @@ export default function FilterBar({
       <div className="flex space-x-2"> 
         {/* "All" Button  */}
         <button
-          onClick={() => onFilterChange("All")}
+          onClick={() => {
+            onFilterChange("All");
+            onCategoryChange([]);
+          }}
           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap
             ${
               isAllButtonActive
@@ -79,34 +91,44 @@ export default function FilterBar({
 
         {/* Other Main Filters */}
         <FilterButton filterName="Recommended" />
-        <FilterButton filterName="Attending" /> 
+        <FilterButton filterName="Going" /> 
         <FilterButton filterName="Past" /> 
 
         {/* UPDATED Category Dropdown */}
         <div className="relative flex-shrink-0">
-          <select
-            value={selectedCategory}
-            onChange={(e) => onCategoryChange(e.target.value)}
-            className={`h-full appearance-none rounded-md px-3 py-1.5 pr-8 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 whitespace-nowrap
+          <button
+            onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+            className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 whitespace-nowrap
               ${
                 isCategoryActive
                   ? "bg-gray-800 text-white" // Active
                   : "bg-gray-200 text-gray-700" // Inactive
               }`}
           >
-            <option value="All">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-          <ChevronDownIcon
-            className={`pointer-events-none absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2
-              ${
-                isCategoryActive ? "text-white" : "text-gray-500" 
-              }`}
-          />
+            <span>{isCategoryActive ? `${selectedCategories.length} Selected` : "Categories"}</span>
+            <ChevronDownIcon
+              className={`h-5 w-5 transition-transform
+                ${isCategoryDropdownOpen ? "rotate-180" : ""}
+                ${isCategoryActive ? "text-white" : "text-gray-500"}`}
+            />
+          </button>
+          {isCategoryDropdownOpen && (
+            <div className="absolute mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-20">
+              <div className="py-1">
+                {categories.map((cat) => (
+                  <label key={cat} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(cat)}
+                      onChange={() => handleCategoryCheckboxChange(cat)}
+                      className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                    />
+                    <span className="ml-3">{cat}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* List View Button */}
