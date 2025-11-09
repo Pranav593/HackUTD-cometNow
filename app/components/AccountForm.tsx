@@ -13,12 +13,14 @@ import { UTD_MAJORS } from "@/lib/majors";
 export default function AccountForm() {
   const { user, logout } = useAuth();
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [initialMajorLoaded, setInitialMajorLoaded] = useState(false);
 
   // --- FORM STATE ---
   const [selectedMajor, setSelectedMajor] = useState("");
+  const [year, setYear] = useState(""); // New state for year
   const [searchQuery, setSearchQuery] = useState("");
   const [notifySocial, setNotifySocial] = useState(true);
   const [notifyFood, setNotifyFood] = useState(true);
@@ -27,6 +29,10 @@ export default function AccountForm() {
   const [notifyCareer, setNotifyCareer] = useState(false);
   const [notifyRecreation, setNotifyRecreation] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [majorError, setMajorError] = useState<string | null>(null);
+
+  // Academic Years
+  const academicYears = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
 
   // This filters the major list in real-time
   const filteredMajors = useMemo(() => {
@@ -48,10 +54,14 @@ export default function AccountForm() {
         const snap = await getDoc(ref);
         if (snap.exists()) {
           const data = snap.data() as any;
+          setName(data.name || user.displayName || "");
           if (data.major) {
             setSelectedMajor(data.major);
             setInitialMajorLoaded(true);
             setSearchQuery(data.major);
+          }
+          if (data.year) {
+            setYear(data.year);
           }
           if (data.interests) {
             setNotifySocial(Boolean(data.interests.social));
@@ -61,6 +71,9 @@ export default function AccountForm() {
             setNotifyCareer(Boolean(data.interests.career));
             setNotifyRecreation(Boolean(data.interests.recreation));
           }
+        } else {
+          // If no profile, set name from auth
+          setName(user.displayName || "");
         }
       } catch (err) {
         console.error("Failed to load user profile", err);
@@ -74,27 +87,37 @@ export default function AccountForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    setIsSaving(true);
+    setIsSaved(false);
+
+    const interests = {
+      social: notifySocial,
+      food: notifyFood,
+      study: notifyStudy,
+      academic: notifyAcademic,
+      career: notifyCareer,
+      recreation: notifyRecreation,
+    };
+
     const payload = {
-      major: selectedMajor || null,
-      interests: {
-        social: notifySocial,
-        food: notifyFood,
-        study: notifyStudy,
-        academic: notifyAcademic,
-        career: notifyCareer,
-        recreation: notifyRecreation,
-      },
       name: name || null,
+      major: selectedMajor || null,
+      year: year || null,
+      interests: interests,
       email: email || null,
       updatedAt: new Date().toISOString(),
     };
+
     try {
       await setDoc(doc(db, "users", user.uid), payload, { merge: true });
       setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 2000);
+      setTimeout(() => setIsSaved(false), 3000);
     } catch (err) {
       console.error("Failed to save preferences", err);
       alert("Failed to save. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -180,6 +203,24 @@ export default function AccountForm() {
               Selected: <span className="font-semibold text-orange-600">{selectedMajor}</span>
             </p>
           )}
+        </div>
+
+        {/* Academic Year */}
+        <div className="mt-6">
+          <label htmlFor="academic-year" className="block text-sm font-medium text-gray-700">
+            Your Year
+          </label>
+          <select
+            id="academic-year"
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            className="mt-1 w-full rounded-md border border-gray-300 bg-white py-3 px-4 text-gray-900 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+          >
+            <option value="" disabled>Select your year</option>
+            {academicYears.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
         </div>
 
         {/* Event Type Interests */}
