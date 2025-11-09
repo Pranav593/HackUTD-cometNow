@@ -16,11 +16,11 @@ export default function Home() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
   const [isListViewOpen, setIsListViewOpen] = useState(false);
-  
+
   // New state for new filters
   const [activeFilter, setActiveFilter] = useState<MainFilter>("All");
   const [selectedCategory, setSelectedCategory] = useState("All"); // "All" or an EventCategory
-  
+
   const [allEvents, setAllEvents] = useState<EventData[]>([]);
 
   // Fetch events ONCE when the page loads
@@ -34,13 +34,12 @@ export default function Home() {
   // --- Handlers for the FilterBar ---
   const handleFilterChange = (filter: MainFilter) => {
     setActiveFilter(filter);
-    setIsListViewOpen(false); // Close list view if a map filter is clicked
+    setIsListViewOpen(false);
   };
-  
+
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    // When you pick a category, it makes sense to show "All" events in that category
-    setActiveFilter("All"); 
+    setActiveFilter("All");
     setIsListViewOpen(false);
   };
 
@@ -50,36 +49,44 @@ export default function Home() {
 
   return (
     <main className="relative h-screen overflow-hidden">
-      {/* LAYER 0: THE MAP */}
-      <div className="absolute inset-0 z-0">
-        <ClientMap
-          onPinClick={setSelectedEvent}
-          events={allEvents}
-          activeFilter={activeFilter}
-          selectedCategory={selectedCategory}
-        />
-      </div>
-
-      {/* LAYER 1: THE UI */}
-      <div className="relative z-10 h-full w-full pointer-events-none">
-        <div className="pointer-events-auto">
-          <TopBar />
-          <FilterBar
+      
+      {/* BLURRED CONTENT WRAPPER */}
+      <div className={isFormOpen ? "relative h-full w-full blur-sm transition duration-200" : "relative h-full w-full transition duration-200"}>
+        
+        {/* LAYER 0: THE MAP */}
+        <div className="absolute inset-0 z-0">
+          <ClientMap
+            onPinClick={setSelectedEvent}
+            events={allEvents}
             activeFilter={activeFilter}
-            onFilterChange={handleFilterChange}
             selectedCategory={selectedCategory}
-            onCategoryChange={handleCategoryChange}
-            onListViewClick={handleListViewClick}
           />
         </div>
 
-        <div className="pointer-events-auto">
-          <DropPinButton onClick={() => setIsFormOpen(true)} />
-          <BottomNav />
-        </div>
-      </div>
+        {/* LAYER 1: THE UI */}
+        <div className="relative z-10 h-full w-full pointer-events-none">
+          <div className="pointer-events-auto">
+            <TopBar />
+            <FilterBar
+              activeFilter={activeFilter}
+              onFilterChange={handleFilterChange}
+              selectedCategory={selectedCategory}
+              onCategoryChange={handleCategoryChange}
+              onListViewClick={handleListViewClick}
+            />
+          </div>
 
-      {/* LAYER 2: THE MODALS */}
+          <div className="pointer-events-auto">
+            <DropPinButton onClick={() => setIsFormOpen(true)} />
+            <BottomNav />
+          </div>
+        </div>
+        
+      </div>
+      {/* END OF BLURRED CONTENT WRAPPER */}
+
+
+      {/* LAYER 2: THE MODALS (Remain outside the blur wrapper) */}
       <DropPinForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
