@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-// Import all necessary modules, including Link and navigation hooks
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import TopBar from "@/app/components/TopBar";
+import RecommendedEvents from "@/app/components/RecommendedEvents";
 import {
   PaperAirplaneIcon,
   SparklesIcon,
@@ -84,8 +84,9 @@ export default function AdvisorPage() {
       {/* 1. Top Bar (Fixed) */}
       <TopBar />
 
-      {/* 2. Scrollable Chat Area  */}
+      {/* 2. Scrollable content: recommendations + chat */}
       <main className="flex-1 overflow-y-auto p-4 pt-20 pb-36 space-y-4">
+        <RecommendedEvents />
         {messages.map((msg, index) => (
           <div
             key={index}

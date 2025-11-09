@@ -44,7 +44,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'No events provided' });
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  let model;
+  try {
+    model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  } catch (err) {
+    console.error('[recommend] Gemini unavailable:', err);
+    // Fallback: choose 5 highest going or earliest events purely client-side
+    const sorted = [...events]
+      .sort((a: any,b: any) => (b.going||0) - (a.going||0))
+      .slice(0,5)
+      .map((e:any) => e.id);
+    return res.status(200).json({ recommendedEventIds: sorted });
+  }
 
   const prompt = `
     You are a helpful student advisor at The University of Texas at Dallas.
@@ -70,7 +81,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     Do not include any other text or explanation in your response.
   `;
 
-  console.log("Sending prompt to AI:", prompt);
+  // Avoid logging full prompt to reduce noise
+  console.log('[recommend] Prompt length:', prompt.length);
 
   try {
     const generationFn = () => model.generateContent(prompt);
