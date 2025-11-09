@@ -1,106 +1,80 @@
-// app/page.tsx
 "use client";
-
-// Imports from both branches
-import { useState, useEffect } from "react";
-import { useUser } from '@auth0/nextjs-auth0/client'; // <-- From AuthBack
-import ClientMap from "@/app/components/ClientMap";
-import TopBar from "@/app/components/TopBar";
-import FilterBar from "@/app/components/FilterBar";
-import BottomNav from "@/app/components/BottomNav";
-import DropPinButton from "@/app/components/DropPinButton";
-import DropPinForm from "@/app/components/DropPinForm";
-import EventDetailSheet from "@/app/components/EventDetailSheet";
-
-// Interface from 'main'
-interface EventData {
-  title: string;
-  category: "Social" | "Food" | "Study" | "Academic"| "Career"|" Recreation" | string;
-  locationName: string;
-  startTime: string;
-  endTime: string;
-  coordinates: [number, number];
-}
+import { useState, useEffect } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 export default function Home() {
-  // State from 'main'
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
+  const { user, error, isLoading } = useUser();
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
-  // Hooks from 'AuthBack'
-  const { user, error, isLoading } = useUser();
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  // Passive check: do NOT redirect, just show banner if onboarding incomplete.
+  useEffect(() => {
+    let active = true;
+    const check = async () => {
+      if (!isLoading && user) {
+        try {
+          const res = await fetch('/api/onboarding-status', { cache: 'no-store' });
+          if (active && res.ok) {
+            const data = await res.json();
+            if (data?.authenticated && data?.onboarded === false) {
+              setNeedsOnboarding(true);
+            }
+          }
+        } catch {/* ignore */}
+      }
+    };
+    check();
+    return () => { active = false; };
+  }, [isLoading, user]);
 
-  // Passive check from 'AuthBack': do NOT redirect, just show banner.
-  useEffect(() => {
-    let active = true;
-    const check = async () => {
-      if (!isLoading && user) {
-        try {
-          const res = await fetch('/api/onboarding-status', { cache: 'no-store' });
-          if (active && res.ok) {
-            const data = await res.json();
-            if (data?.authenticated && data?.onboarded === false) {
-              setNeedsOnboarding(true);
-            }
-          }
-        } catch {/* ignore */}
-      }
-    };
-    check();
-    return () => { active = false; };
-  }, [isLoading, user]);
-
-  return (
-    <main className="relative h-screen overflow-hidden">
-      {/* LAYER 0: THE MAP */}
-      <div className="absolute inset-0 z-0">
-        <ClientMap onPinClick={setSelectedEvent} />
-      </div>
-
-      {/* LAYER 1: THE UI */}
-      <div className="relative z-10 h-full w-full pointer-events-none">
-        <div className="pointer-events-auto">
-          {/*
-            Auth state is passed to TopBar.
-            You'll need to update TopBar.tsx to use these props
-            to show the Login/Logout buttons and user email.
-          */}
-          <TopBar user={user} isLoading={isLoading} />
-          <FilterBar />
-
-          {/* Onboarding Banner from 'AuthBack' */}
-          {user && needsOnboarding && (
-            <div className="px-4 pt-2"> {/* Wrapper for positioning */}
-              <div className="rounded border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800 flex items-center justify-between">
-                <span>Finish setting up your profile to personalize your experience.</span>
-                <a
-                  href="/onboarding"
-                  className="ml-4 rounded bg-amber-600 px-3 py-1 text-white text-sm hover:bg-amber-500"
-                >
-                  Complete Onboarding
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        <div className="pointer-events-auto">
-          <DropPinButton onClick={() => setIsFormOpen(true)} />
-          <BottomNav />
-        </div>
-      </div>
-
-      {/* LAYER 2: THE MODALS */}
-      <DropPinForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-      />
-      
-      <EventDetailSheet
-        event={selectedEvent}
-        onClose={() => setSelectedEvent(null)}
-      />
-    </main>
-  );
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-white font-sans">
+      <main className="flex min-h-screen w-full max-w-4xl flex-col items-center justify-start py-10 px-6">
+        <header className="w-full flex items-center justify-between mb-10">
+          <div className="text-2xl font-bold">cometNow</div>
+          <div className="text-sm">
+            {isLoading ? (
+              <span>Loading...</span>
+            ) : user ? (
+              <>
+                <span className="mr-4 text-gray-700">{user.name || user.email}</span>
+                <a className="mr-4" href="/api/auth/logout?returnTo=%2F">
+                  Logout
+                </a>
+              </>
+            ) : (
+              <div className="flex items-center gap-3">
+                <a
+                  href="/api/auth/login?returnTo=%2F"
+                  className="rounded bg-gray-800 px-3 py-1 text-white hover:bg-gray-700"
+                >
+                  Login
+                </a>
+                <a
+                  href="/api/auth/signup"
+                  className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-500"
+                >
+                  Sign Up
+                </a>
+              </div>
+            )}
+          </div>
+        </header>
+        <section className="w-full space-y-4">
+          <h1 className="text-4xl font-bold text-gray-900">Welcome to cometNow</h1>
+          <p className="text-gray-600 max-w-xl">
+            Discover and organize campus life—events, study sessions, and more. {user ? "You're logged in." : "Create an account to get started."}
+          </p>
+          {user && needsOnboarding && (
+            <div className="rounded border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800 flex items-center justify-between">
+              <span>Finish setting up your profile to personalize your experience.</span>
+              <a
+                href="/onboarding"
+                className="ml-4 rounded bg-amber-600 px-3 py-1 text-white text-sm hover:bg-amber-500"
+              >Complete Onboarding</a>
+            </div>
+          )}
+        </section>
+      </main>
+    </div>
+  );
 }

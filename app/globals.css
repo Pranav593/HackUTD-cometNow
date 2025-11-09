@@ -10,95 +10,15 @@
   --color-foreground: var(--foreground);
 }
 
-
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
-.utd-building-label {
-  background-color: transparent;
-  border: none;
-  box-shadow: none;
-  color: #3d3d3d;
-  font-size: 11px;
-  font-weight: 600;
-  font-family: sans-serif;
-  
-  padding: 0 !important; 
-}
-
-.leaflet-zoom-15 .utd-building-label {
-  display: none !important;
-}
-
-.leaflet-zoom-16 .utd-building-label,
-.leaflet-zoom-17 .utd-building-label,
-.leaflet-zoom-18 .utd-building-label {
-  display: block !important;
-}
-
-.marker-cluster {
-  background: none;
-  border: none;
-}
-
-.marker-cluster div {
-  /* This is the white outer circle */
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  
-  /* This centers the inner circle */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.marker-cluster div span {
-  /* This is the inner colored circle */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  
-  /* Text styles */
-  color: #333;
-  font-weight: 700;
-  font-family: sans-serif;
-  font-size: 14px;
-}
-
-/* Small Cluster */
-.marker-cluster-small div {
-  width: 40px;
-  height: 40px;
-}
-.marker-cluster-small div span {
-  width: 34px;
-  height: 34px;
-  background-color: rgba(92, 184, 92, 0.7); /* Green (Study) */
-}
-/* Medium Cluster */
-.marker-cluster-medium div {
-  width: 44px;
-  height: 44px;
-}
-.marker-cluster-medium div span {
-  width: 38px;
-  height: 38px;
-  background-color: rgba(240, 173, 78, 0.7); /* Orange-ish */
-}
-
-/* Large Cluster */
-.marker-cluster-large div {
-  width: 48px;
-  height: 48px;
-}
-.marker-cluster-large div span {
-  width: 42px;
-  height: 42px;
-  background-color: rgba(217, 83, 79, 0.7); /* Red-ish (Food) */
 }
