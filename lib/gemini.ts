@@ -1,12 +1,12 @@
+/**
+ * Gemini client singleton.
+ * Throws early if API key missing to fail fast on misconfiguration.
+ */
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = process.env.GEMINI_API_KEY;
-
-if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is not configured in environment variables.");
-}
+if (!apiKey) throw new Error("GEMINI_API_KEY is not configured in environment variables.");
 
 const genAI = new GoogleGenerativeAI(apiKey);
-
 export default genAI;
 

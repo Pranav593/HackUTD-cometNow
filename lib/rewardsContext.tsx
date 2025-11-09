@@ -1,16 +1,18 @@
+/**
+ * Rewards context: manages points, chat cooldown, raffle tickets.
+ * Persists state in localStorage and resets on logout.
+ */
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { useAuth } from "./authContext";
 
-// Local storage keys
 const POINTS_KEY = "rewards:points";
 const LAST_CHAT_KEY = "rewards:lastChatAwardAt";
 const TICKETS_KEY = "rewards:tickets";
 
-// Constants
-const INITIAL_POINTS = 50; // starting balance
-const CHAT_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+const INITIAL_POINTS = 50;
+const CHAT_COOLDOWN_MS = 10 * 60 * 1000; // ms
 
 export type RewardsContextType = {
   points: number;
@@ -32,13 +34,11 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
   const [tickets, setTickets] = useState<number>(0);
   const { user, loading } = useAuth();
 
-  // Hydrate from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(POINTS_KEY);
       const storedPoints = stored !== null ? parseInt(stored, 10) : NaN;
       if (!Number.isFinite(storedPoints)) {
-        // initialize
         localStorage.setItem(POINTS_KEY, String(INITIAL_POINTS));
         setPoints(INITIAL_POINTS);
       } else {
@@ -60,12 +60,10 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
         setTickets(0);
       }
     } catch (e) {
-      // If localStorage not available, keep defaults
       console.warn("[Rewards] Failed to read localStorage:", e);
     }
   }, []);
 
-  // Persist points whenever they change
   useEffect(() => {
     try {
       localStorage.setItem(POINTS_KEY, String(points));
@@ -154,7 +152,6 @@ export function RewardsProvider({ children }: { children: React.ReactNode }) {
     addTickets,
   }), [points, lastChatAwardAt, tickets, addPoints, spendPoints, awardEventCreation, awardChatPoints, resetPoints, addTickets]);
 
-  // Clear cache on logout
   useEffect(() => {
     if (loading) return;
     if (!user) {

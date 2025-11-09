@@ -1,4 +1,6 @@
-// Central list of UTD majors used in onboarding and account pages
+/**
+ * Central list of UTD majors used in onboarding/account preferences.
+ */
 export const UTD_MAJORS: string[] = [
   "Accounting",
   "Accounting and Analytics",

@@ -1,3 +1,7 @@
+/**
+ * GET /api/test-ai
+ * Smoke test for Gemini connectivity via SDK.
+ */
 import { NextApiRequest, NextApiResponse } from 'next';
 import genAI from '@/lib/gemini';
 
@@ -8,17 +12,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const model = genAI.getGenerativeModel({ model: 'models/gemini-pro' });
-    console.log('Model initialized successfully');
-    
     const result = await model.generateContent('Say hello');
-    console.log('Content generation request sent');
-    
     const response = await result.response;
-    console.log('Response received');
-    
     const text = response.text();
-    console.log('Response text:', text);
-    
     res.status(200).json({ 
       success: true, 
       message: text,

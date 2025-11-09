@@ -1,3 +1,7 @@
+/**
+ * Auth context powered by Firebase Auth.
+ * Provides user, loading, and login/signup/logout helpers.
+ */
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
