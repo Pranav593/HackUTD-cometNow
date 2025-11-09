@@ -36,7 +36,7 @@ export default function EventListView({
     });
 
     // 2. Create "Trending" list
-    const trendingEvents = [...nowEvents].sort((a, b) => b.going - a.going);
+  const trendingEvents = [...nowEvents].sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
 
     // 3. Group all events by category
     const categorizedEvents = events.reduce((acc, event) => {
