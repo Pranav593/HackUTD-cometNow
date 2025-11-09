@@ -26,6 +26,12 @@ interface EventData {
   endTime: string;
   coordinates: [number, number];
   going?: number;
+import { EventData } from "./EventListItem";
+
+interface ChatMessage {
+  id: string;
+  userName: string;
+  text: string;
 }
 
 interface ChatMessage {
@@ -53,12 +59,30 @@ const getCategoryEmoji = (category: string) => {
 };
 
 const EventIcon = ({ category }: { category: string }) => {
-  const emoji = getCategoryEmoji(category);
-  return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 border border-orange-200">
-      <span className="text-3xl">{emoji}</span>
-    </div>
-  );
+  const emoji = getCategoryEmoji(category);
+  return (
+    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 border border-orange-200">
+      <span className="text-3xl">{emoji}</span>
+    </div>
+  );
+};
+
+// --- TIME UTILITIES ---
+const formatHhMm = (time: string) => {
+  // Converts "HH:MM" 24h to 12h display
+  const [h, m] = time.split(":");
+  const hour = parseInt(h || "0", 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${m?.padStart(2, "0") ?? "00"} ${ampm}`;
+};
+
+const formatDate = (isoString: string) => {
+  return new Date(isoString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
@@ -127,6 +151,20 @@ export default function EventDetailSheet({
       chatContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages, isChatOpen]);
+    if (!event) return;
+
+    const calculateTime = () => {
+        const endTime = (event.endAtUtc
+          ? new Date(event.endAtUtc)
+          : new Date(`${event.date}T${event.endTime}`)
+        ).getTime();
+        const now = new Date().getTime();
+        const diff = endTime - now;
+        setTimeRemaining(formatRemainingTime(diff));
+    };
+
+    calculateTime(); // Initial calculation
+    const timer = setInterval(calculateTime, 1000); // Update every second
 
 
   if (!event) return null;

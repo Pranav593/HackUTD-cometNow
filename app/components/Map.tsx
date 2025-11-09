@@ -18,9 +18,11 @@ interface Building {
 }
 
 interface MapProps {
-  events: EventData[];
+  events?: EventData[];
   activeFilter: MainFilter;
-  selectedCategories: string[]; // support multi-select categories
+  // Support either a single selectedCategory (current usage) or legacy selectedCategories array
+  selectedCategory?: string;
+  selectedCategories?: string[];
   onPinClick: (event: EventData) => void;
 }
 
@@ -42,6 +44,7 @@ const UTD_BOUNDS: L.LatLngBoundsExpression = [
 export default function Map({
   events,
   activeFilter,
+  selectedCategory,
   selectedCategories,
   onPinClick,
 }: MapProps) {
@@ -58,49 +61,53 @@ export default function Map({
       .catch((err) => console.error("Error fetching building data:", err));
   }, []);
 
-  // Filtering Logic (unchanged)
+  // Filtering Logic
   const filteredEvents = useMemo(() => {
+    const safeEvents = Array.isArray(events) ? events : [];
     const now = new Date();
-    let eventsToShow = [...events];
+    let eventsToShow = [...safeEvents];
 
-    // --- 1. Filter by Active Filter (Past/Recommended/Upcoming) ---
+    // Normalize categories from either prop shape
+    const categories: string[] = Array.isArray(selectedCategories)
+      ? selectedCategories
+      : selectedCategory && selectedCategory !== "All"
+      ? [selectedCategory]
+      : [];
+
+    // Helper to parse event end datetime safely
+    const getEventEnd = (e: EventData) =>
+      e.endAtUtc ? new Date(e.endAtUtc) : new Date(`${e.date}T${e.endTime}`);
+
     if (activeFilter === "Past") {
-      // Show events that have already ended
-      eventsToShow = eventsToShow.filter(
-        (event) => new Date(event.endTime) < now
-      );
+      eventsToShow = eventsToShow.filter((event) => getEventEnd(event) < now);
     } else if (activeFilter === "Recommended") {
       // Show future events, sorted by 'going' count (trending)
       eventsToShow = eventsToShow
-        .filter((event) => new Date(event.endTime) >= now)
+        .filter((event) => getEventEnd(event) >= now)
         .sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
     } else {
-      eventsToShow = eventsToShow.filter(
-        (event) => new Date(event.endTime) >= now
+      eventsToShow = eventsToShow.filter((event) => getEventEnd(event) >= now);
+    }
+
+    // Category filter (if any selected)
+    if (categories.length > 0) {
+      eventsToShow = eventsToShow.filter((event) =>
+        categories.includes(event.category)
       );
     }
 
-    if (selectedCategories.length > 0) {
-      eventsToShow = eventsToShow.filter(
-        (event) => new Date(event.endTime) >= now
+    // Exclude expired=true for safety
+    eventsToShow = eventsToShow.filter(e => !e.expired);
+
+    // Debug visibility for why items may not show
+    try {
+      console.log(
+        `[Map] events in=${safeEvents.length}, after filter=${eventsToShow.length}, filter=${activeFilter}, categories=${categories.join(",") || "none"}`
       );
-    }
-
-    // --- 2. Filter by Selected Categories (if any) ---
-    if (selectedCategories.length > 0) {
-    // --- 3. Safety filter for expired flag ---
-    // If the event data includes an `expired` property, ensure we exclude them
-    eventsToShow = eventsToShow.filter((e) => !(hasExpired(e) && e.expired === true));
-    }
-
-    // --- 3. Safety filter for expired flag ---
-    // If the event data includes an `expired` property, ensure we exclude them
-    eventsToShow = eventsToShow.filter((e) => !(hasExpired(e) && e.expired));
-
-    // [DEBUGGING LOG REMOVED] - Removed console.log for cleaner code submission
+    } catch {}
 
     return eventsToShow;
-  }, [events, activeFilter, selectedCategories]); // Dependencies updated for stability
+  }, [events, activeFilter, selectedCategory, selectedCategories]); // Dependencies updated for stability
 
   return (
     <MapContainer
