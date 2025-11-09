@@ -117,6 +117,45 @@ When you visit the production site, you can install it as an app:
 - Theme Color: Black (`#000000`)
 - Display Mode: Standalone
 
+## Authentication
+
+### Current Implementation (Firebase Auth)
+
+The app uses Firebase Authentication + Firestore. The React auth context in `lib/authContext.tsx` provides:
+
+```
+user: Firebase User | null
+loading: boolean
+login(email, password)
+signup(email, password)
+logout()
+```
+
+Workflow:
+1. Not logged in -> redirected to `/login`.
+2. After signup (email/password) -> redirected to `/onboarding`.
+3. On successful onboarding save -> redirected to `/` (main map/events page).
+
+Routing guard logic lives in `app/providers/RouteGuard.tsx`.
+
+Onboarding writes a document to `users/{uid}` with `major`, `year`, `interests`, etc. This replaces prior Auth0-based API routes.
+
+### Environment Variables
+Add the following to `.env.local` (example names; use your own Firebase project values):
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+```
+
+### Future Enhancements
+- Add password reset & email verification flows.
+- Add a `profileComplete` boolean flag to user doc for faster checks.
+- Implement secure server-side operations using Firebase Admin if needed.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

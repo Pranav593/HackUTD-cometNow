@@ -8,7 +8,6 @@ import Image from 'next/image';
 export default function LoginPage() {
   const router = useRouter();
   const { user, loading, login, signup } = useAuth();
-  
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
