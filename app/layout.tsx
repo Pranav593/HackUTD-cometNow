@@ -2,6 +2,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
+import { AuthProvider } from '@/lib/authContext';
+import RouteGuard from './providers/RouteGuard';
 
 export const metadata: Metadata = {
   title: "HackUTD CometNow",
@@ -33,7 +35,9 @@ export default function RootLayout({
        
       */}
       <body className="antialiased h-screen w-screen overflow-hidden">
-        {children}
+        <AuthProvider>
+          <RouteGuard>{children}</RouteGuard>
+        </AuthProvider>
       </body>
     </html>
   );
