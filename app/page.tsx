@@ -34,12 +34,11 @@ export default function Home() {
   // --- Handlers for the FilterBar ---
   const handleFilterChange = (filter: MainFilter) => {
     setActiveFilter(filter);
-    setIsListViewOpen(false); // Close list view if a map filter is clicked
+    setIsListViewOpen(false); 
   };
   
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    // When you pick a category, it makes sense to show "All" events in that category
     setActiveFilter("All"); 
     setIsListViewOpen(false);
   };
@@ -48,36 +47,58 @@ export default function Home() {
     setIsListViewOpen(true);
   };
 
+  // --- THIS IS THE NEW HANDLER THAT FIXES THE BUG ---
+  // This function is passed to the List View
+  const handleEventFromListClick = (event: EventData) => {
+    setIsListViewOpen(false); // Close the list
+    setSelectedEvent(event); // Open the detail sheet
+  };
+  // --------------------------------------------------
+
+  // This variable controls the blur
+  const isModalOpen = isFormOpen || isListViewOpen || selectedEvent != null;
+
   return (
     <main className="relative h-screen overflow-hidden">
-      {/* LAYER 0: THE MAP */}
-      <div className="absolute inset-0 z-0">
-        <ClientMap
-          onPinClick={setSelectedEvent}
-          events={allEvents}
-          activeFilter={activeFilter}
-          selectedCategory={selectedCategory}
-        />
-      </div>
-
-      {/* LAYER 1: THE UI */}
-      <div className="relative z-10 h-full w-full pointer-events-none">
-        <div className="pointer-events-auto">
-          <TopBar />
-          <FilterBar
+      
+      {/* --- This is your dev's Blur Wrapper --- */}
+      <div
+        className={`relative h-full w-full transition-all duration-300
+          ${isModalOpen ? "blur-sm" : ""}
+        `}
+      >
+        {/* LAYER 0: THE MAP */}
+        <div className="absolute inset-0 z-0">
+          <ClientMap
+            onPinClick={setSelectedEvent}
+            events={allEvents}
             activeFilter={activeFilter}
-            onFilterChange={handleFilterChange}
             selectedCategory={selectedCategory}
-            onCategoryChange={handleCategoryChange}
-            onListViewClick={handleListViewClick}
+            // We removed the AI prop
           />
         </div>
 
-        <div className="pointer-events-auto">
-          <DropPinButton onClick={() => setIsFormOpen(true)} />
-          <BottomNav />
+        {/* LAYER 1: THE UI */}
+        <div className="relative z-10 h-full w-full pointer-events-none">
+          <div className="pointer-events-auto">
+            <TopBar />
+            <FilterBar
+              activeFilter={activeFilter}
+              onFilterChange={handleFilterChange}
+              selectedCategory={selectedCategory}
+              onCategoryChange={handleCategoryChange}
+              onListViewClick={handleListViewClick}
+            />
+          </div>
+
+          <div className="pointer-events-auto">
+            <DropPinButton onClick={() => setIsFormOpen(true)} />
+            <BottomNav />
+          </div>
         </div>
       </div>
+      {/* --- End of the blur wrapper --- */}
+
 
       {/* LAYER 2: THE MODALS */}
       <DropPinForm
@@ -91,7 +112,8 @@ export default function Home() {
       <EventListView
         isOpen={isListViewOpen}
         onClose={() => setIsListViewOpen(false)}
-        events={allEvents} // Pass all events to the list view
+        events={allEvents}
+        onEventClick={handleEventFromListClick} // <-- THIS IS THE FIX
       />
     </main>
   );

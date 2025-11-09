@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
-import { EventCategory } from "./EventListItem"; // Import your new type
+import { EventCategory } from "./EventListItem"; 
 
 // Your new categories
 const categories: EventCategory[] = [
@@ -17,13 +17,10 @@ const categories: EventCategory[] = [
 export type MainFilter = "All" | "Recommended" | "Past";
 
 interface FilterBarProps {
-  // Main filters
   activeFilter: MainFilter;
   onFilterChange: (filter: MainFilter) => void;
-  // Category filter
-  selectedCategory: string; // Can be "All" or an EventCategory
+  selectedCategory: string;
   onCategoryChange: (category: string) => void;
-  // List view
   onListViewClick: () => void;
 }
 
@@ -31,15 +28,16 @@ export default function FilterBar({
   activeFilter,
   onFilterChange,
   selectedCategory,
-  onCategoryChange,
   onListViewClick,
+  onCategoryChange, 
 }: FilterBarProps) {
   
-  
+  const isAllButtonActive = activeFilter === "All" && selectedCategory === "All";
+
   const FilterButton = ({
     filterName,
   }: {
-    filterName: MainFilter;
+    filterName: "Recommended" | "Past";
   }) => (
     <button
       onClick={() => onFilterChange(filterName)}
@@ -60,8 +58,20 @@ export default function FilterBar({
       style={{ pointerEvents: "auto" }}
     >
       <div className="flex space-x-3">
-        {/* Main Filters */}
-        <FilterButton filterName="All" />
+        {/* --- "All" Button  --- */}
+        <button
+          onClick={() => onFilterChange("All")}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors
+            ${
+              isAllButtonActive
+                ? "bg-gray-800 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+        >
+          All
+        </button>
+
+        {/* Other Main Filters */}
         <FilterButton filterName="Recommended" />
         <FilterButton filterName="Past" />
 
