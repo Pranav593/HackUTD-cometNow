@@ -1,53 +1,47 @@
-// app/components/EventPin.tsx
 "use client";
 
 import { Marker } from "react-leaflet";
 import L from "leaflet";
+import { EventData } from "./EventListItem"; // Import EventData
 
-// Define the shape of your event data
-interface EventData {
-  title: string;
-  category: "Social" | "Food" | "Study" | "Academic"| "Career"|" Recreation" | "Other" | string;
-  locationName: string;
-  startTime: string;
-  endTime: string;
-  coordinates: [number, number];
-}
-
-// --- NEW PROPS ---
-// We need the onPinClick function to be passed in
 interface EventPinProps {
   event: EventData;
   onPinClick: (event: EventData) => void;
 }
 
-// --- ICON ---
+// Icon path (unchanged)
 const ICONS = {
   bolt: 'M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z',
 };
 
-// --- TIME-BASED STYLE LOGIC ---
-const getPinStyle = (startTime: string) => {
+
+const getPinStyle = (startTime: string, endTime: string) => {
   const now = new Date();
   const eventStart = new Date(startTime);
-  const hoursDiff = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-  let bgColor = "bg-gray-500";
+  const eventEnd = new Date(endTime);
+  
   const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 text-white" fill="currentColor"><path d="${ICONS.bolt}" /></svg>`;
-
-  if (hoursDiff <= 0) {
-    bgColor = "bg-green-600"; // Happening Now
-  } else if (hoursDiff <= 3) {
-    bgColor = "bg-orange-500"; // Soon
-  } else {
-    bgColor = "bg-red-500"; // Later
+  
+  // 1. Check for "Past" first. 
+  if (eventEnd < now) {
+    return { bgColor: "bg-orange-600", iconHtml }; // "Past" is Orange
   }
 
-  return { bgColor, iconHtml };
+  // If it's not past, check for future events
+  const hoursDiff = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+  if (hoursDiff <= 1) { // 1 hour threshold for "Now"
+    return { bgColor: "bg-green-600", iconHtml }; // "Now" is Green
+  } else if (hoursDiff <= 3) {
+    return { bgColor: "bg-orange-500", iconHtml }; // "Soon" is light Orange
+  } else {
+    return { bgColor: "bg-red-500", iconHtml }; // "Later" is Red
+  }
 };
 
 export default function EventPin({ event, onPinClick }: EventPinProps) {
-  const { bgColor, iconHtml } = getPinStyle(event.startTime);
+  
+  const { bgColor, iconHtml } = getPinStyle(event.startTime, event.endTime);
 
   const customIcon = L.divIcon({
     className: "custom-pin",
@@ -67,14 +61,11 @@ export default function EventPin({ event, onPinClick }: EventPinProps) {
     <Marker
       position={event.coordinates}
       icon={customIcon}
-      // --- THIS IS THE FIX ---
-      // This tells the marker to call your function when clicked
       eventHandlers={{
         click: () => {
           onPinClick(event);
         },
       }}
-    >
-    </Marker>
+    />
   );
 }
