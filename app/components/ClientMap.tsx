@@ -1,18 +1,19 @@
 // app/components/ClientMap.tsx
-"use client"; // This makes it a Client Component
+"use client";
 
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
 
-export default function ClientMap() {
+// 1. Accept `props`
+export default function ClientMap(props: any) {
   const Map = useMemo(
     () =>
       dynamic(() => import("@/app/components/Map"), {
         loading: () => <p>Map is loading...</p>,
-        ssr: false, // This is allowed here!
+        ssr: false,
       }),
     []
   );
 
-  return <Map />;
+  return <Map {...props} />;
 }

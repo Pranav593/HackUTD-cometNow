@@ -1,22 +1,36 @@
 // app/page.tsx
-"use client";
-import { useState } from "react"; // 1. Import useState
+"use client"; // <-- Make page.tsx a client component to manage state
+
+import { useState } from "react";
 import ClientMap from "@/app/components/ClientMap";
 import TopBar from "@/app/components/TopBar";
 import FilterBar from "@/app/components/FilterBar";
 import BottomNav from "@/app/components/BottomNav";
 import DropPinButton from "@/app/components/DropPinButton";
-import DropPinForm from "@/app/components/DropPinForm"; // 2. Import the new form
+import DropPinForm from "@/app/components/DropPinForm";
+import EventDetailSheet from "@/app/components/EventDetailSheet"; // <-- 1. Import new sheet
+
+// Define EventData shape here so this page knows about it
+interface EventData {
+  title: string;
+  category: "Social" | "Food" | "Study" | "Academic"| "Career"|" Recreation" | string;
+  locationName: string;
+  startTime: string;
+  endTime: string;
+  coordinates: [number, number];
+}
 
 export default function Home() {
-  // 3. Add state to manage the modal
   const [isFormOpen, setIsFormOpen] = useState(false);
+  // --- 2. ADD STATE FOR THE SELECTED EVENT ---
+  const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
 
   return (
     <main className="relative h-screen overflow-hidden">
       {/* LAYER 0: THE MAP */}
       <div className="absolute inset-0 z-0">
-        <ClientMap />
+        {/* 3. Pass the "setter" function down to the map */}
+        <ClientMap onPinClick={setSelectedEvent} />
       </div>
 
       {/* LAYER 1: THE UI */}
@@ -27,17 +41,21 @@ export default function Home() {
         </div>
         
         <div className="pointer-events-auto">
-          {/* 4. Pass the onClick handler to the button */}
           <DropPinButton onClick={() => setIsFormOpen(true)} />
           <BottomNav />
         </div>
       </div>
 
-      {/* LAYER 2: THE MODAL FORM */}
-      {/* 5. Add the form, controlled by your state */}
+      {/* LAYER 2: THE MODALS */}
       <DropPinForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
+      />
+      
+      {/* 4. Add the new Event Detail Sheet */}
+      <EventDetailSheet
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
       />
     </main>
   );

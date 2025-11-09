@@ -94,13 +94,13 @@
       "abbreviation": "ECSN",
       "name": "Engineering and Computer Science North",
       "link": "https://www.google.com/maps/search/UTD+Engineering+and+Computer+Science+North/@32.9861265,-96.7509981,17z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.9861265,-96.7509981"
+      "coordinate": "32.986935543959376,-96.75043812704617"
     },
     {
       "abbreviation": "ECSS",
       "name": "Engineering and Computer Science South",
       "link": "https://www.google.com/maps/search/UTD+Engineering+and+Computer+Science+South/@32.986147,-96.7509276,17z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.986147,-96.7509276"
+      "coordinate": "32.986233337852156,-96.75048279060898"
     },
     {
       "abbreviation": "ECSW",
@@ -262,7 +262,7 @@
       "abbreviation": "SB",
       "name": "Service Building",
       "link": "https://www.google.com/maps/search/UTD+Service+Building/@32.9886048,-96.7508214,16z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.9886048,-96.7508214"
+      "coordinate": "32.99130624835321,-96.7463711644529"
     },
     {
       "abbreviation": "SG",
@@ -292,7 +292,7 @@
       "abbreviation": "SSA",
       "name": "Student Services Building Addition",
       "link": "https://www.google.com/maps/place/Student+Services+Building+Addition/@32.9860822,-96.7495635,17z/data=!3m1!4b1!4m6!3m5!1s0x864c21fffd1d451b:0x7d17ea7436b269eb!8m2!3d32.9860822!4d-96.7495635!16s%2Fg%2F1tdg_psf?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.9860822,-96.7495635"
+      "coordinate": "32.98590608527401,-96.74949413553688"
     },
     {
       "abbreviation": "SSB",
@@ -304,7 +304,7 @@
       "abbreviation": "SU",
       "name": "Student Union",
       "link": "https://www.google.com/maps/search/UTD+Student+Union/@32.9863605,-96.7492899,17z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.9863605,-96.7492899"
+      "coordinate": "32.98704961751097,-96.74882149560901"
     },
     {
       "abbreviation": "SUFC",
@@ -335,6 +335,60 @@
       "name": "Waterview Science and Technology Center",
       "link": "https://www.google.com/maps/place/UTD+Waterview+Science+and+Technology+Center,+17919+Waterview+Pkwy,+Dallas,+TX+75252/@32.9918289,-96.7569435,17z/data=!3m1!4b1!4m6!3m5!1s0x864c22047fcc9991:0x38399f6b7602beb2!8m2!3d32.9918289!4d-96.7569435!16s%2Fg%2F1tzzvxj8?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
       "coordinate": "32.9918289,-96.7569435"
+    },
+    {
+      "abbreviation": "SF(1-6)",
+      "name": "Soccer Fields (1–6)",
+      "link": "https://www.google.com/maps?q=32.982574492534425,-96.75260876080723",
+      "coordinate": "32.982574492534425,-96.75260876080723"
+    },
+    {
+      "abbreviation": "SF(7-10)",
+      "name": "Soccer Fields (7–10)",
+      "link": "https://www.google.com/maps?q=32.980010565304966,-96.75273038648966",
+      "coordinate": "32.980010565304966,-96.75273038648966"
+    },
+    {
+      "abbreviation": "MPF",
+      "name": "Multipurpose Fields",
+      "link": "https://www.google.com/maps?q=32.98183021269074,-96.75033631739079",
+      "coordinate": "32.98183021269074,-96.75033631739079"
+    },
+    {
+      "abbreviation": "BBF",
+      "name": "Baseball Field",
+      "link": "https://www.google.com/maps?q=32.9817562440172,-96.74913266938127",
+      "coordinate": "32.9817562440172,-96.74913266938127"
+    },
+    {
+      "abbreviation": "SBF",
+      "name": "Softball Field",
+      "link": "https://www.google.com/maps?q=32.98266202401497,-96.74934624595285",
+      "coordinate": "32.98266202401497,-96.74934624595285"
+    },
+    {
+      "abbreviation": "TC(1-10)",
+      "name": "Tennis Courts (1–10)",
+      "link": "https://www.google.com/maps?q=32.982806261391126,-96.75030299180656",
+      "coordinate": "32.982806261391126,-96.75030299180656"
+    },
+    {
+      "abbreviation": "FITC",
+      "name": "Fitness Court",
+      "link": "https://www.google.com/maps?q=32.98390654034287,-96.7510139133836",
+      "coordinate": "32.98390654034287,-96.7510139133836"
+    },
+    {
+      "abbreviation": "BC(1-3)",
+      "name": "Basketball Courts (1–3)",
+      "link": "https://www.google.com/maps?q=32.98346002138862,-96.75057068016712",
+      "coordinate": "32.98346002138862,-96.75057068016712"
+    },
+    {
+      "abbreviation": "VBC",
+      "name": "Volleyball Courts",
+      "link": "https://www.google.com/maps?q=32.983305106121726,-96.75000794779912",
+      "coordinate": "32.983305106121726,-96.75000794779912"
     }
   ],
   "university_housing": [
@@ -438,7 +492,7 @@
       "abbreviation": "P8A",
       "name": "Phase 8A (Buildings 61-63) + Leasing Office",
       "link": "https://www.google.com/maps/search/UTD+Phase+8A+(Buildings+61-63)+%2B+Leasing+Office/@32.9862551,-96.7516175,16z/data=!3m1!4b1?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
-      "coordinate": "32.9862551,-96.7516175"
+      "coordinate": "32.98936173131868,-96.75547088632892"
     },
     {
       "abbreviation": "P9",
