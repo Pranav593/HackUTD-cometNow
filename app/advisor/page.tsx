@@ -20,10 +20,11 @@ interface Message {
 
 export default function AdvisorPage() {
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "ai",
-      text: "Hi! I'm Comet Advisor. Ask me anything about UTD events, buildings, or academics.",
+      text: "Hi! I'm CometNow AI advisor. Ask me anything about UTD events, buildings, or academics.",
     },
   ]);
 
@@ -38,20 +39,42 @@ export default function AdvisorPage() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input) return;
 
-  const currentInput = input;
-  const userMessage: Message = { sender: "user", text: currentInput };
+    const currentInput = input;
+    const userMessage: Message = { sender: "user", text: currentInput };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setLoading(true);
 
-    // Mock AI response
-    setTimeout(() => {
-      const aiMessage: Message = { sender: "ai", text: `I'm a mock response for: "${currentInput}"` };
+    try {
+      const response = await fetch("/api/advisor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt: currentInput }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      const aiMessage: Message = { sender: "ai", text: data.text };
       setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+    } catch (error) {
+      console.error("Failed to fetch AI response:", error);
+      const errorMessage: Message = {
+        sender: "ai",
+        text: "Sorry, I'm having trouble connecting. Please try again later.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -80,6 +103,13 @@ export default function AdvisorPage() {
             </div>
           </div>
         ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="max-w-xs rounded-2xl px-4 py-3 shadow-sm bg-orange-600 text-white">
+              Thinking...
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </main>
 
@@ -89,13 +119,13 @@ export default function AdvisorPage() {
         {/* Input Form  */}
         <form
           onSubmit={handleSubmit}
-          className="flex gap-2 border-t border-gray-200 p-4"
+          className="flex gap-2 border-t border-gray-200 bg-white/80 p-4 backdrop-blur-md"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about upcoming events, campus info, and more..."
+            placeholder="Ask about upcoming events & more..."
             className="flex-1 rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 focus:border-orange-500 focus:ring-orange-500"
           />
           <button
