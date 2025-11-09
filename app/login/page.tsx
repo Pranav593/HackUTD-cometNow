@@ -1,3 +1,7 @@
+/**
+ * LoginPage
+ * Handles login and signup flows. Redirects authenticated users away.
+ */
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -17,7 +21,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      // If user is already logged in, go to home
       router.replace('/');
     }
   }, [loading, user, router]);
@@ -37,7 +40,6 @@ export default function LoginPage() {
         router.replace('/onboarding');
       }
     } catch (err: any) {
-      // Safely access the error message
       setError(err?.message || 'Authentication failed');
     } finally {
       setSubmitting(false);
@@ -57,7 +59,6 @@ return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
         
-        {/* LOGO SECTION - Centered and Branded */}
         <div className="flex flex-col items-center mb-10">
           <Image src="/hacklogo.png" alt="Logo" width={70}height={70}className="object-contain" />
           <h1 className="text-3xl font-extrabold text-gray-900">CometNow</h1>
@@ -67,13 +68,11 @@ return (
           {mode === 'login' ? 'Log in with your UTD Email' : 'Create your Comet Account'}
         </h2>
 
-        {/* Error Display */}
         {error && (
           <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* EMAIL */}
           <div>
             <label className="block text-sm font-medium text-gray-700">UTD Email</label>
             <input
@@ -86,7 +85,6 @@ return (
             />
           </div>
           
-          {/* DISPLAY NAME (SIGNUP ONLY) */}
           {mode === 'signup' && (
             <div>
               <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -102,7 +100,6 @@ return (
             </div>
           )}
           
-          {/* PASSWORD */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
@@ -115,7 +112,6 @@ return (
             />
           </div>
           
-          {/* SUBMIT BUTTON - Branded Orange */}
           <button
             type="submit"
             disabled={submitting}
@@ -125,7 +121,6 @@ return (
           </button>
         </form>
 
-        {/* MODE TOGGLE  */}
         <p className="text-center text-sm text-gray-600 mt-8">
           {mode === 'login' ? (
             <>

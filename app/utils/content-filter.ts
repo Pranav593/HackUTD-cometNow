@@ -1,5 +1,8 @@
-// This file contains content filtering utilities
-// Note: This is a basic implementation. For production, consider using established content filtering services.
+/**
+ * Basic content filtering utilities.
+ * NOTE: Regex list is broad and may over-match. For production use a vetted
+ * third-party moderation service (e.g. OpenAI, Perspective API, etc.).
+ */
 
 const inappropriateWords = [
     // Profanity
@@ -60,9 +63,7 @@ const inappropriateWords = [
     'supremac\\w*', 'fascist\\w*', 'communist\\w*', 'marxist\\w*'
 ];
 
-// Add more categories as needed...
 
-// Create a single regex pattern that matches any inappropriate word
 const inappropriatePattern = new RegExp(
     `\\b(${inappropriateWords.join('|')})\\b`,
     'i'
@@ -70,8 +71,5 @@ const inappropriatePattern = new RegExp(
 
 export function containsInappropriateContent(text: string): { isInappropriate: boolean; matches: string[] } {
     const matches = text.match(inappropriatePattern) || [];
-    return {
-        isInappropriate: matches.length > 0,
-        matches: matches
-    };
+    return { isInappropriate: matches.length > 0, matches };
 }

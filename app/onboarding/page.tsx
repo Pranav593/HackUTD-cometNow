@@ -1,3 +1,8 @@
+/**
+ * OnboardingPage
+ * Multi-step profile setup (welcome -> major/year -> interests). Ensures
+ * user profile completeness before granting full app access.
+ */
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -15,7 +20,6 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   
-  // State for the multi-step form
   const [step, setStep] = useState(1);
   const [major, setMajor] = useState('');
   const [year, setYear] = useState(years[0]);
@@ -23,7 +27,6 @@ export default function OnboardingPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // --- External Logic Hooks  ---
   useEffect(() => {
     if (!loading && !user) {
       router.replace('/login');
@@ -86,7 +89,6 @@ export default function OnboardingPage() {
   };
 
 
-  // --- Render logic for loading and guards  ---
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -101,7 +103,6 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-xl bg-white p-6 sm:p-10 rounded-xl shadow-2xl">
         
-        {/* Header & Progress Indicator */}
         <div className="mb-8">
           <h1 className="text-2xl font-extrabold text-gray-900 text-center">
             Comet Profile Setup
@@ -118,7 +119,6 @@ export default function OnboardingPage() {
               </button>
             )}
           </div>
-          {/* Progress Bar */}
           <div className="mt-1 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div 
               className="h-full bg-orange-600 transition-all duration-500 ease-out" 
@@ -127,14 +127,12 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        {/* Error Message */}
         {error && (
             <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
         )}
 
         <form onSubmit={submit}>
           
-          {/* --- STEP 1: WELCOME / NAME CONFIRMATION --- */}
           {step === 1 && (
             <div className="animate-fadeIn space-y-6 text-center">
                 <h2 className="text-3xl font-bold text-gray-800">Hi, {user.displayName || user.email || 'Comet'}!</h2>
@@ -156,13 +154,11 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* --- STEP 2: MAJOR & YEAR --- */}
           {step === 2 && (
             <div className="animate-fadeIn space-y-8">
               <h2 className="text-2xl font-bold text-gray-800">Your Academic Path</h2>
               
               <section className="space-y-6">
-                {/* MAJOR DROPDOWN */}
                 <div>
                   <label htmlFor="major" className="block text-sm font-medium text-gray-700 mb-1">
                     Primary Major
@@ -183,7 +179,6 @@ export default function OnboardingPage() {
                   </select>
                 </div>
 
-                {/* YEAR DROPDOWN */}
                 <div>
                   <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">
                     Current Year
@@ -210,7 +205,6 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* --- STEP 3: INTERESTS & SUBMIT --- */}
           {step === 3 && (
             <div className="animate-fadeIn space-y-8">
               <h2 className="text-2xl font-bold text-gray-800">What are you interested in?</h2>
@@ -238,14 +232,12 @@ export default function OnboardingPage() {
                 </div>
               </section>
 
-              {/* Validation warning */}
               {interests.length === 0 && (
                   <p className="mt-4 text-sm text-red-500 font-medium">
                       Please select at least one interest.
                   </p>
               )}
               
-              {/* SUBMIT BUTTON */}
               <button
                 type="submit"
                 disabled={saving || interests.length === 0}
