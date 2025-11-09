@@ -14,28 +14,27 @@ import { collection, getDocs, query, where, doc, getDoc, updateDoc } from "fireb
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/authContext";
 
+// MainFilter type is "All" | "Recommended" | "Past"
 export default function Home() {
-  // --- All app state now lives here ---
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
-  const [isListViewOpen, setIsListViewOpen] = useState(false);
+  const [isListViewOpen, setIsListViewOpen] = useState(false); 
 
-  // New state for new filters
   const [activeFilter, setActiveFilter] = useState<MainFilter>("All");
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  // Removed: const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const [allEvents, setAllEvents] = useState<EventData[]>([]);
   const [displayEvents, setDisplayEvents] = useState<EventData[]>([]);
   const { user } = useAuth();
 
-  // Fetch events ONCE when the page loads
+  // --- 1. Event Fetching ---
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "events"));
         const events = querySnapshot.docs.map(doc => {
           const data = doc.data() as any;
-          // Normalize coordinates: ensure we always have a tuple.
           let coordinates: [number, number] = [0, 0];
           if (Array.isArray(data.coordinates) && data.coordinates.length === 2) {
             const [lat, lng] = data.coordinates;
@@ -68,103 +67,68 @@ export default function Home() {
     fetchEvents();
   }, []);
 
+  // --- 2. Filtering Logic ---
   useEffect(() => {
     const filterEvents = async () => {
       let filtered = allEvents;
+      const now = Date.now();
 
-      // Past events filter
+      // --- Past / Active filtering ---
       if (activeFilter === 'Past') {
-        const now = new Date();
-        // Assuming endTime is a string that can be parsed into a Date
-        filtered = filtered.filter(event => {
-          const endDate = new Date(event.date + 'T' + event.endTime);
-          return endDate < now;
-        });
+        // Show only past events
+        filtered = allEvents.filter(event => 
+            event.endAtUtc && Date.parse(event.endAtUtc) < now
+        );
       } else {
-        const now = new Date();
-        // Filter out past events unless the 'Past' filter is active
-        filtered = filtered.filter(event => {
-          const endDate = new Date(event.date + 'T' + event.endTime);
-          return endDate >= now;
-        });
+        // Exclude past events for All/Recommended views
+        filtered = filtered.filter(event => 
+            !(event.endAtUtc && Date.parse(event.endAtUtc) < now)
+        );
       }
-
-      // Category filter (single select)
-      if (selectedCategory !== "All") {
-        filtered = filtered.filter(event => event.category === selectedCategory);
-      }
-
-      // Attending filter (was 'Going')
-      if (activeFilter === 'Going' && user) {
-        const goingQuery = query(collection(db, "going"), where("userId", "==", user.uid));
-        const querySnapshot = await getDocs(goingQuery);
-        const eventIds = querySnapshot.docs.map(doc => doc.data().eventId);
-        
-        filtered = filtered.filter(event => eventIds.includes(event.id) || event.creatorId === user.uid);
-      }
-
+      
       // Recommended filter
       if (activeFilter === 'Recommended' && user) {
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          const userProfile = userSnap.data();
-          
-          try {
-            const response = await fetch('/api/recommend', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ 
-                userProfile: {
-                  major: userProfile.major || '',
-                  year: userProfile.year || '',
-                  interests: userProfile.interests || []
-                }, 
-                events: allEvents 
-              }),
-            });
+         if (userSnap.exists()) {
+             const userProfile = userSnap.data();
+             try {
+                const response = await fetch('/api/recommend', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                    userProfile: { major: userProfile.major || '', year: userProfile.year || '', interests: userProfile.interests || [] }, 
+                    events: allEvents
+                  }),
+                });
 
-            if (response.ok) {
-              const data = await response.json();
-              if (Array.isArray(data.recommendedEventIds)) {
-                filtered = allEvents.filter(event => data.recommendedEventIds.includes(event.id));
-              } else {
-                console.error('Invalid recommendations format');
-                filtered = allEvents; // Fall back to showing all events
-              }
-            } else {
-              const error = await response.json();
-              console.error('Failed to fetch recommendations:', error.message);
-              filtered = allEvents; // Fall back to showing all events
-            }
-          } catch (error) {
-            console.error('Error calling recommendations API:', error);
-            filtered = allEvents; // Fall back to showing all events
-          }
-        } else {
-          // Handle case where user profile doesn't exist
-          filtered = [];
-        }
+                if (response.ok) {
+                  const data = await response.json();
+                  if (Array.isArray(data.recommendedEventIds)) {
+                    filtered = filtered.filter(event => data.recommendedEventIds.includes(event.id));
+                  } else {
+                    console.error('Invalid recommendations format');
+                  }
+                } else {
+                  const error = await response.json();
+                  console.error('Failed to fetch recommendations:', error.message);
+                }
+             } catch (error) {
+               console.error('Error calling recommendations API:', error);
+             }
+         }
       }
 
-      // Mark expired based on endAtUtc
-      const nowMs = Date.now();
-      filtered = filtered.map(ev => {
-        if (ev.endAtUtc && !ev.expired && Date.parse(ev.endAtUtc) < nowMs) {
-          return { ...ev, expired: true };
-        }
-        return ev;
-      });
-      // Exclude expired from display
-      setDisplayEvents(filtered.filter(ev => !ev.expired));
+      // Removed: Logic for APPLY CATEGORY FILTER
+      // With the category filter removed, no further filtering is needed here for 'All' view.
+
+      setDisplayEvents(filtered);
     };
 
     filterEvents();
-  }, [allEvents, activeFilter, selectedCategory, user]);
+  }, [allEvents, activeFilter, user]); // Removed selectedCategories from dependency array
 
-  // Periodic expiration check + optional backend sync
+  // --- 3. Background Expiration Check ---
   useEffect(() => {
     const interval = setInterval(async () => {
       const nowMs = Date.now();
@@ -173,7 +137,6 @@ export default function Home() {
         if (ev.endAtUtc && !ev.expired && Date.parse(ev.endAtUtc) < nowMs) {
           const newEv = { ...ev, expired: true };
           changed = true;
-          // Fire-and-forget backend mark (ignore errors)
           try { if (ev.id) await updateDoc(doc(db, 'events', ev.id), { expired: true }); } catch {}
           return newEv;
         }
@@ -187,42 +150,45 @@ export default function Home() {
   }, [allEvents]);
 
 
-  // --- Handlers for the FilterBar ---
+  // --- 4. Handlers ---
   const handleFilterChange = (filter: MainFilter) => {
     setActiveFilter(filter);
+    // Removed: setSelectedCategories([]);
     setIsListViewOpen(false); 
   };
 
-  const handleCategoryChange = (categories: string[]) => {
-    const next = categories && categories.length > 0 ? categories[0] : "All";
-    setSelectedCategory(next);
-    setActiveFilter("All"); 
-    setIsListViewOpen(false);
-  };
+  // Removed: const handleCategoryChange = (categories: string[]) => { ... }
 
   const handleListViewClick = () => {
     setIsListViewOpen(true);
   };
 
-  // --- THIS IS THE NEW HANDLER THAT FIXES THE BUG ---
-  // This function is passed to the List View
   const handleEventFromListClick = (event: EventData) => {
-    setIsListViewOpen(false); // Close the list
-    setSelectedEvent(event); // Open the detail sheet
+    setIsListViewOpen(false);
+    setSelectedEvent(event);
   };
   // --------------------------------------------------
 
-  // This variable controls the blur
   const isModalOpen = isFormOpen || isListViewOpen || selectedEvent != null;
 
   return (
-    <main className="relative h-screen overflow-hidden">
+    // Main container uses flex-col for correct vertical stacking
+    <main className="relative h-screen flex flex-col overflow-hidden">
       
-      {/* --- This is your dev's Blur Wrapper --- */}
-      <div
-        className={`relative h-full w-full transition-all duration-300
-          ${isModalOpen ? "blur-sm" : ""}
-        `}
+      {/* 1. Top Bar */}
+      <TopBar />
+
+      {/* 2. Filter Bar */}
+      <FilterBar
+        activeFilter={activeFilter}
+        onFilterChange={handleFilterChange}
+        // Removed props: selectedCategories={selectedCategories} onCategoryChange={handleCategoryChange}
+        onListViewClick={handleListViewClick} 
+      />
+      
+      {/* 3. MAP AREA - flex-1 ensures it fills the space */}
+      <div 
+        className={`relative flex-1 transition-all duration-300 ${isModalOpen ? "blur-sm" : ""}`}
       >
         {/* LAYER 0: THE MAP */}
         <div className="absolute inset-0 z-0">
@@ -230,38 +196,28 @@ export default function Home() {
             onPinClick={setSelectedEvent}
             events={displayEvents}
             activeFilter={activeFilter}
-            selectedCategory={selectedCategory}
+            selectedCategory={"All"} // Now hardcoded to "All" as category filter is gone
           />
         </div>
 
-        {/* LAYER 1: THE UI */}
-        <div className="relative z-10 h-full w-full pointer-events-none">
-          <div className="pointer-events-auto">
-            <FilterBar
-              activeFilter={activeFilter}
-              onFilterChange={handleFilterChange}
-              selectedCategories={selectedCategory === "All" ? [] : [selectedCategory]}
-              onCategoryChange={handleCategoryChange}
-              onListViewClick={handleListViewClick}
-            />
-          </div>
-
-          <div className="pointer-events-auto">
+        {/* Floating elements over map */}
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          {/* Drop Pin Button */}
+          <div className="absolute bottom-4 right-4 pointer-events-auto">
             <DropPinButton onClick={() => setIsFormOpen(true)} />
-            <BottomNav />
           </div>
         </div>
-        
       </div>
-      {/* END OF BLURRED CONTENT WRAPPER */}
+      
+      {/* 4. Bottom Nav */}
+      <BottomNav />
 
 
-      {/* LAYER 2: THE MODALS (Remain outside the blur wrapper) */}
+      {/* MODALS (Outside the main flow) */}
       <DropPinForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onCreated={(evt) => {
-          // Optimistically update lists so the map refreshes immediately
           setAllEvents((prev) => [evt, ...prev]);
         }}
       />
@@ -273,7 +229,7 @@ export default function Home() {
         isOpen={isListViewOpen}
         onClose={() => setIsListViewOpen(false)}
         events={displayEvents}
-        onEventClick={handleEventFromListClick} // <-- THIS IS THE FIX
+        onEventClick={handleEventFromListClick}
       />
     </main>
   );
