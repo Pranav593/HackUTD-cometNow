@@ -1,80 +1,119 @@
 // app/components/Map.tsx
 "use client";
 
-// We are using react-leaflet (which IS Leaflet.js)
 import { MapContainer, TileLayer, Tooltip, Marker } from "react-leaflet";
 import L from "leaflet";
 import { useEffect, useState } from "react";
+import MarkerClusterGroup from "react-leaflet-markercluster";
+import EventPin from "./EventPin";
 
-// Define the shape of your building data
+// --- NEW: Updated Building interface to match your JSON ---
 interface Building {
   name: string;
-  abbr: string;
-  coords: [number, number];
-  url: string;
+  abbreviation: string; // Changed from 'abbr'
+  coordinate: string; // This is now a string "lat,lng"
+  link: string;
+}
+// --------------------------------------------------------
+
+// EventData interface (unchanged)
+interface EventData {
+  title: string;
+  category: "Food" | "Social" | "Study" | string;
+  locationName: string;
+  startTime: string;
+  endTime: string;
+  coordinates: [number, number];
 }
 
-// --- NEW: A "Transparent" Icon ---
-// We need a Marker to "anchor" our label, but we make it invisible.
+// invisibleIcon (unchanged)
 const invisibleIcon = L.divIcon({
   className: "invisible-icon",
-  iconSize: [0, 0], // Zero size
+  iconSize: [0, 0],
   iconAnchor: [0, 0],
 });
-// ------------------------------------
-
+// Map constants (unchanged)
 const UTD_COORDINATES: [number, number] = [32.9858, -96.7504];
 const UTD_BOUNDS: L.LatLngBoundsExpression = [
-  [32.980, -96.758], // Southwest
-  [32.995, -96.745], // Northeast
+  [32.980, -96.758],
+  [32.995, -96.745],
 ];
 
 export default function Map() {
   const [buildings, setBuildings] = useState<Building[]>([]);
+  const [events, setEvents] = useState<EventData[]>([]);
 
   useEffect(() => {
-    fetch("/buildings.json") // Fetches from 'public/buildings.json'
+    // --- UPDATED: Fetch and parse  real building data ---
+    fetch("/enriched_locations.json") // 1. Fetch the new file
       .then((res) => res.json())
       .then((data) => {
-        setBuildings(data);
+        // 2. Combine both arrays into one
+        const allBuildings = [...data.buildings, ...data.university_housing];
+        setBuildings(allBuildings);
       })
       .catch((err) => console.error("Error fetching building data:", err));
+    // -----------------------------------------------------
+
+    // Fetch mock events (unchanged)
+    fetch("/mock-events.json")
+      .then((res) => res.json())
+      .then((data) => setEvents(data))
+      .catch((err) => console.error("Error fetching mock events:", err));
   }, []);
 
   return (
     <MapContainer
       center={UTD_COORDINATES}
       zoom={16}
-      scrollWheelZoom={true}
-      style={{ height: "100vh", width: "100vw" }}
+      style={{ height: "100%", width: "100%" }}
       maxBounds={UTD_BOUNDS}
       minZoom={15}
       maxZoom={18}
       maxBoundsViscosity={1.0}
+      scrollWheelZoom={true}
     >
-      {/* LAYER 1: The Modern, No-Label Base Map (from CartoDB) */}
+      {/* LAYER 1: The Base Map (unchanged) */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        // This is the "Positron No-Labels" style. Perfect for you.
         url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
       />
 
       {/* LAYER 2: Your Custom Building Labels */}
-      {buildings.map((building) => (
-        <Marker
-          key={building.abbr}
-          position={building.coords}
-          icon={invisibleIcon} // Use the invisible icon
-        >
-          <Tooltip
-            permanent // Makes the label always visible
-            direction="center"
-            className="utd-building-label" // Custom class for styling
+      {buildings.map((building) => {
+        // --- NEW: Parse the coordinate string ---
+        const coordsArray = building.coordinate
+          .split(",")
+          .map(Number) as [number, number];
+        
+        // Safety check
+        if (isNaN(coordsArray[0]) || isNaN(coordsArray[1])) {
+          return null;
+        }
+
+        return (
+          <Marker
+            key={building.name} // Use new key
+            position={coordsArray} // Use new parsed coordinates
+            icon={invisibleIcon}
           >
-            {building.abbr}
-          </Tooltip>
-        </Marker>
-      ))}
+            <Tooltip
+              permanent
+              direction="center"
+              className="utd-building-label"
+            >
+              {building.name} {/* Use new key */}
+            </Tooltip>
+          </Marker>
+        );
+      })}
+
+      {/* LAYER 3: Your Event Pins  */}
+      <MarkerClusterGroup>
+        {events.map((event, index) => (
+          <EventPin key={`${event.title}-${index}`} event={event} />
+        ))}
+      </MarkerClusterGroup>
     </MapContainer>
   );
 }

@@ -1,6 +1,7 @@
+// app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import "leaflet/dist/leaflet.css"; // <-- ADD THIS LINE HERE
+import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
   title: "HackUTD CometNow",
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: "#FFFFFF", // Changed to white for light theme
 };
 
 export default function RootLayout({
@@ -23,11 +24,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // Add "light" to force light theme
+    <html lang="en" className="light">
       <head>
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
-      <body className="antialiased">
+      {/*
+       
+      */}
+      <body className="antialiased h-screen w-screen overflow-hidden">
         {children}
       </body>
     </html>
