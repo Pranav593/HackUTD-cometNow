@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ReactNode, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   XMarkIcon,
   InformationCircleIcon,
@@ -16,8 +16,6 @@ import Image from "next/image";
 import { useAuth } from "@/lib/authContext";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot, orderBy } from "firebase/firestore";
-
-// Use the unified EventData definition
 import { EventData } from "./EventListItem";
 
 interface ChatMessage {
@@ -59,11 +57,13 @@ const EventIcon = ({ category }: { category: string }) => {
 };
 
 // --- TIME UTILITIES ---
-const formatTime = (isoString: string) => {
-  return new Date(isoString).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+const formatHhMm = (time: string) => {
+  // Converts "HH:MM" 24h to 12h display
+  const [h, m] = time.split(":");
+  const hour = parseInt(h || "0", 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${m?.padStart(2, "0") ?? "00"} ${ampm}`;
 };
 
 const formatDate = (isoString: string) => {
@@ -120,7 +120,10 @@ export default function EventDetailSheet({
     if (!event) return;
 
     const calculateTime = () => {
-        const endTime = new Date(event.endTime).getTime();
+        const endTime = (event.endAtUtc
+          ? new Date(event.endAtUtc)
+          : new Date(`${event.date}T${event.endTime}`)
+        ).getTime();
         const now = new Date().getTime();
         const diff = endTime - now;
         setTimeRemaining(formatRemainingTime(diff));
@@ -269,7 +272,13 @@ export default function EventDetailSheet({
             <div className="text-center">
               <span className="text-xs text-gray-500">Time</span>
               <p className="font-semibold text-gray-800 text-sm">
-                {formatTime(event.startTime)} - {formatTime(event.endTime)}
+                {event.startAtUtc
+                  ? new Date(event.startAtUtc).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                  : formatHhMm(event.startTime)}
+                {" "}-{" "}
+                {event.endAtUtc
+                  ? new Date(event.endAtUtc).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                  : formatHhMm(event.endTime)}
               </p>
             </div>
             <div className="text-center">

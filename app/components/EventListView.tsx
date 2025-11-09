@@ -29,20 +29,28 @@ export default function EventListView({
     
     // 1. Get "Now" events: starting within 1 hour AND not yet ended
     const nowEvents = events.filter(event => {
-      const eventStart = new Date(event.startTime);
-      const eventEnd = new Date(event.endTime);
-      // Hours difference: (startTime - now) / (ms in an hour)
+      const eventStart = event.startAtUtc
+        ? new Date(event.startAtUtc)
+        : new Date(`${event.date}T${event.startTime}`);
+      const eventEnd = event.endAtUtc
+        ? new Date(event.endAtUtc)
+        : new Date(`${event.date}T${event.endTime}`);
       const hoursDiff = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
       return hoursDiff <= 1 && eventEnd > now;
     });
 
-    // 2. Create "Trending" list: Use "Now" events, sort by 'going' count (descending, handling null/undefined with ?? 0)
-    const trendingEvents = [...nowEvents].sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
+    // 2. Create "Trending" list (handle optional going)
+    const trendingEvents = [...nowEvents].sort(
+      (a, b) => (b.going ?? 0) - (a.going ?? 0)
+    );
 
     // 3. Group all future events by category
     const categorizedEvents = events.reduce((acc, event) => {
+      const eventEnd = event.endAtUtc
+        ? new Date(event.endAtUtc)
+        : new Date(`${event.date}T${event.endTime}`);
       // Skip events that have already ended
-      if (new Date(event.endTime) < now) return acc;
+      if (eventEnd < now) return acc;
       
       // Group by category
       if (!acc[event.category]) {
