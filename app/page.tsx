@@ -99,6 +99,10 @@ export default function Home() {
         isOpen={isListViewOpen}
         onClose={() => setIsListViewOpen(false)}
         events={allEvents} // Pass all events to the list view
+        onEventClick={(event) => {
+          setSelectedEvent(event);
+          setIsListViewOpen(false);
+        }}
       />
     </main>
   );
