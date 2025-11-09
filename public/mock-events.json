@@ -1,0 +1,42 @@
+[
+  {
+    "title": "Free Pizza",
+    "category": "Food",
+    "locationName": "Student Union (SU)",
+    "startTime": "2025-11-08T17:00:00Z",
+    "endTime": "2025-11-08T18:00:00Z",
+    "coordinates": [32.9860, -96.7491]
+  },
+  {
+    "title": "Smash Bros Tournament",
+    "category": "Social",
+    "locationName": "ECSW",
+    "startTime": "2025-11-08T18:00:00Z",
+    "endTime": "2025-11-08T20:00:00Z",
+    "coordinates": [32.9872, -96.7503]
+  },
+  {
+    "title": "A&P Study Group",
+    "category": "Study",
+    "locationName": "McDermott Library (MC)",
+    "startTime": "2025-11-08T16:00:00Z",
+    "endTime": "2025-11-08T17:30:00Z",
+    "coordinates": [32.9858, -96.7483]
+  },
+  {
+    "title": "ACM Meeting",
+    "category": "Social",
+    "locationName": "ECSW",
+    "startTime": "2025-11-08T19:00:00Z",
+    "endTime": "2025-11-08T21:00:00Z",
+    "coordinates": [32.9873, -96.7504]
+  },
+  {
+    "title": "Market Vending",
+    "category": "Food",
+    "locationName": "Plinth",
+    "startTime": "2025-11-08T12:00:00Z",
+    "endTime": "2025-11-08T18:00:00Z",
+    "coordinates": [32.9858, -96.7504]
+  }
+]
