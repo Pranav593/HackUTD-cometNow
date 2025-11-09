@@ -10,7 +10,7 @@ import DropPinForm from "@/app/components/DropPinForm";
 import EventDetailSheet from "@/app/components/EventDetailSheet";
 import EventListView from "@/app/components/EventListView"; 
 import { EventData } from "@/app/components/EventListItem"; 
-import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/authContext";
 
@@ -22,7 +22,7 @@ export default function Home() {
 
   // New state for new filters
   const [activeFilter, setActiveFilter] = useState<MainFilter>("All");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
   const [allEvents, setAllEvents] = useState<EventData[]>([]);
   const [displayEvents, setDisplayEvents] = useState<EventData[]>([]);
@@ -86,13 +86,13 @@ export default function Home() {
         });
       }
 
-      // Category filter
-      if (selectedCategories.length > 0) {
-        filtered = filtered.filter(event => selectedCategories.includes(event.category));
+      // Category filter (single select)
+      if (selectedCategory !== "All") {
+        filtered = filtered.filter(event => event.category === selectedCategory);
       }
 
-      // Going filter
-      if (activeFilter === 'Going' && user) {
+      // Attending filter (was 'Going')
+      if (activeFilter === 'Attending' && user) {
         const goingQuery = query(collection(db, "going"), where("userId", "==", user.uid));
         const querySnapshot = await getDocs(goingQuery);
         const eventIds = querySnapshot.docs.map(doc => doc.data().eventId);
@@ -146,11 +146,42 @@ export default function Home() {
         }
       }
 
-      setDisplayEvents(filtered);
+      // Mark expired based on endAtUtc
+      const nowMs = Date.now();
+      filtered = filtered.map(ev => {
+        if (ev.endAtUtc && !ev.expired && Date.parse(ev.endAtUtc) < nowMs) {
+          return { ...ev, expired: true };
+        }
+        return ev;
+      });
+      // Exclude expired from display
+      setDisplayEvents(filtered.filter(ev => !ev.expired));
     };
 
     filterEvents();
-  }, [allEvents, activeFilter, selectedCategories, user]);
+  }, [allEvents, activeFilter, selectedCategory, user]);
+
+  // Periodic expiration check + optional backend sync
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const nowMs = Date.now();
+      let changed = false;
+      const updated = await Promise.all(allEvents.map(async ev => {
+        if (ev.endAtUtc && !ev.expired && Date.parse(ev.endAtUtc) < nowMs) {
+          const newEv = { ...ev, expired: true };
+          changed = true;
+          // Fire-and-forget backend mark (ignore errors)
+          try { if (ev.id) await updateDoc(doc(db, 'events', ev.id), { expired: true }); } catch {}
+          return newEv;
+        }
+        return ev;
+      }));
+      if (changed) {
+        setAllEvents(updated);
+      }
+    }, 60_000); // every minute
+    return () => clearInterval(interval);
+  }, [allEvents]);
 
 
   // --- Handlers for the FilterBar ---
@@ -159,8 +190,8 @@ export default function Home() {
     setIsListViewOpen(false); 
   };
 
-  const handleCategoryChange = (categories: string[]) => {
-    setSelectedCategories(categories);
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
     setActiveFilter("All"); 
     setIsListViewOpen(false);
   };
@@ -195,7 +226,7 @@ export default function Home() {
             onPinClick={setSelectedEvent}
             events={displayEvents}
             activeFilter={activeFilter}
-            selectedCategories={selectedCategories}
+            selectedCategory={selectedCategory}
           />
         </div>
 
@@ -206,7 +237,7 @@ export default function Home() {
             <FilterBar
               activeFilter={activeFilter}
               onFilterChange={handleFilterChange}
-              selectedCategories={selectedCategories}
+              selectedCategory={selectedCategory}
               onCategoryChange={handleCategoryChange}
               onListViewClick={handleListViewClick}
             />
@@ -226,6 +257,10 @@ export default function Home() {
       <DropPinForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
+        onCreated={(evt) => {
+          // Optimistically update lists so the map refreshes immediately
+          setAllEvents((prev) => [evt, ...prev]);
+        }}
       />
       <EventDetailSheet
         event={selectedEvent}

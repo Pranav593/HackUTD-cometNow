@@ -51,23 +51,26 @@ export default function Map({
       .catch((err) => console.error("Error fetching building data:", err));
   }, []);
 
-  // Filtering Logic (unchanged)
+  // Filtering Logic
   const filteredEvents = useMemo(() => {
     const now = new Date();
     let eventsToShow = [...events];
 
+    // Helper to parse event end datetime safely
+    const getEventEnd = (e: EventData) => e.endAtUtc ? new Date(e.endAtUtc) : new Date(`${e.date}T${e.endTime}`);
+
     if (activeFilter === "Past") {
-      eventsToShow = eventsToShow.filter(
-        (event) => new Date(event.endTime) < now
-      );
+      eventsToShow = eventsToShow.filter((event) => getEventEnd(event) < now);
     } else if (activeFilter === "Recommended") {
       eventsToShow = eventsToShow
+<<<<<<< Updated upstream
         .filter((event) => new Date(event.endTime) >= now)
+=======
+        .filter((event) => getEventEnd(event) >= now)
+>>>>>>> Stashed changes
         .sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
     } else {
-      eventsToShow = eventsToShow.filter(
-        (event) => new Date(event.endTime) >= now
-      );
+      eventsToShow = eventsToShow.filter((event) => getEventEnd(event) >= now);
     }
 
     if (selectedCategories.length > 0) {
@@ -75,6 +78,16 @@ export default function Map({
         (event) => selectedCategories.includes(event.category)
       );
     }
+
+    // Exclude expired=true for safety
+    eventsToShow = eventsToShow.filter(e => !e.expired);
+
+    // Debug visibility for why items may not show
+    try {
+      console.log(
+        `[Map] events in=${events.length}, after filter=${eventsToShow.length}, filter=${activeFilter}, category=${selectedCategory}`
+      );
+    } catch {}
 
     return eventsToShow;
   }, [events, activeFilter, selectedCategories]);

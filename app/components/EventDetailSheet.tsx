@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ReactNode } from "react";
+import { useState, useEffect } from "react";
 import {
   XMarkIcon,
   InformationCircleIcon,
@@ -17,7 +17,10 @@ import { useAuth } from "@/lib/authContext";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot, orderBy } from "firebase/firestore";
 
+<<<<<<< Updated upstream
 // Use the unified EventData definition
+=======
+>>>>>>> Stashed changes
 import { EventData } from "./EventListItem";
 
 interface ChatMessage {
