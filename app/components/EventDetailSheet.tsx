@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/authContext";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot, orderBy } from "firebase/firestore";
 
+// Use the unified EventData definition
 import { EventData } from "./EventListItem";
 
 interface ChatMessage {
