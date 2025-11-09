@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'No events provided' });
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `
     You are a helpful student advisor at The University of Texas at Dallas.
