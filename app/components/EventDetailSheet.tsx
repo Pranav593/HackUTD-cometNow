@@ -1,7 +1,5 @@
-// app/components/EventDetailSheet.tsx
 "use client";
 
-// --- 1. IMPORT useState and new components ---
 import { useState } from "react";
 import {
   XMarkIcon,
@@ -11,10 +9,8 @@ import {
   CheckIcon,
   PaperAirplaneIcon,
 } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
-import ReportModal from "./ReportModal"; 
+import Image from "next/image";
 
-// Define the shape of your event data
 interface EventData {
   title: string;
   category: "Food" | "Social" | "Study" | string;
@@ -29,18 +25,35 @@ interface EventDetailSheetProps {
   onClose: () => void;
 }
 
-// Placeholder for Burger icon
-const BurgerIcon = () => (
-  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
-    <span className="text-3xl">🍔</span>
-  </div>
-);
+// --- EMOJI MAPPING  ---
+const getCategoryEmoji = (category: string) => {
+  switch (category) {
+    case "Food": return "🍔";
+    case "Social": return "🥳";
+    case "Study": return "🧠";
+    case "Academic": return "📚";
+    case "Career": return "💼";
+    case "Recreation": return "⚽";
+    default: return "🌟";
+  }
+};
+
+// --- EMOJI ICON COMPONENT ---
+const EventIcon = ({ category }: { category: string }) => {
+  const emoji = getCategoryEmoji(category);
+  return (
+    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 border border-orange-200">
+      <span className="text-3xl">{emoji}</span>
+    </div>
+  );
+};
+
+
 
 export default function EventDetailSheet({
   event,
   onClose,
 }: EventDetailSheetProps) {
-  // --- 2. ADD STATE FOR INTERACTIVITY ---
   const [goingCount, setGoingCount] = useState(5);
   const [isGoing, setIsGoing] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -48,13 +61,6 @@ export default function EventDetailSheet({
   const [isReportModalOpen, setIsReportModalOpen] = useState(false); 
 
   if (!event) return null;
-
-  const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const handleGoingClick = () => {
     if (!isGoing) {
@@ -70,7 +76,6 @@ export default function EventDetailSheet({
     setChatMessage("");
   };
 
-  // Reset all local state when the modal closes
   const handleClose = () => {
     onClose();
     setTimeout(() => {
@@ -99,11 +104,14 @@ export default function EventDetailSheet({
         className="absolute bottom-0 left-0 right-0 z-30 flex max-h-[85vh] flex-col rounded-t-2xl bg-white p-6 shadow-xl"
         style={{ pointerEvents: "auto" }}
       >
-        <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+        {/* Header: Logo + Close Button (Updated) */}
+        <div className="flex items-center justify-between pb-4">
+          {/* --- 1. LOGO INTEGRATION --- */}
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-full bg-orange-600"></div>
-            <span className="text-lg font-semibold text-gray-800">CometNow</span>
+          <Image src="/hacklogo.png" alt="Logo" width={32} height={32} className="object-contain" /> 
+            <span className="text-sm font-semibold text-gray-800">CometNow</span>
           </div>
+          {/* --------------------------- */}
           <button
             onClick={handleClose}
             className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
@@ -111,38 +119,47 @@ export default function EventDetailSheet({
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
+        
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto pt-6">
+        <div className="flex-1 overflow-y-auto">
+          {/* Event Header */}
           <div className="flex items-center gap-4">
-            <BurgerIcon />
+            {/* --- 2. DYNAMIC EMOJI ICON --- */}
+            <EventIcon category={event.category} />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 {event.title}
               </h1>
-              <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-600">
-                {event.category} Event
-              </span>
             </div>
           </div>
-          <div className="mt-4 flex justify-around rounded-lg bg-gray-50 p-4">
-            <div className="text-center">
-              <span className="text-sm text-gray-500">Location</span>
-              <p className="font-semibold text-gray-800">
-                {event.locationName}
-              </p>
+
+          {/* Event Details */}
+          <div className="mt-4 flex justify-around rounded-lg bg-gray-50 p-4 text-center">
+            <div className="flex flex-col">
+                <span className="text-sm text-gray-500">Location</span>
+                <p className="font-semibold text-gray-800">
+                    {event.locationName}
+                </p>
             </div>
-            <div className="text-center">
-              <span className="text-sm text-gray-500">Ends In</span>
-              <p className="font-semibold text-gray-800">45 min</p>
+            <div className="flex flex-col">
+                <span className="text-sm text-gray-500">Ends In</span>
+                <p className="font-semibold text-gray-800">45 min</p>
             </div>
           </div>
 
           {/* AI Vibe Summary  */}
           <div className="mt-6 rounded-lg border border-orange-300 bg-orange-50 p-4">
+            <div className="flex items-center gap-2">
+                <InformationCircleIcon className="h-5 w-5 text-orange-600" />
+                <h3 className="font-semibold text-orange-800">AI Vibe Summary</h3>
+            </div>
+            <p className="mt-2 text-sm text-orange-700">
+                Vibe: 🔥 Going fast! They just brought out more cheese.
+            </p>
           </div>
 
-          {/*  3. UPDATED Action Buttons  */}
+          {/* Action Buttons  */}
           <div className="mt-6 flex items-center gap-4">
             <div className="flex items-center gap-2 text-gray-500">
               <UsersIcon className="h-5 w-5" />
@@ -169,8 +186,12 @@ export default function EventDetailSheet({
             </button>
           </div>
 
-          {/*  Live Chat ()  */}
+          {/* Live Chat */}
           <div className="mt-6 rounded-lg bg-gray-50 p-4">
+            <div className="flex items-center gap-2">
+                <ChatBubbleLeftIcon className="h-5 w-5 text-green-600" />
+                <h3 className="font-semibold text-gray-800">Live Chat</h3>
+            </div>
              {!isChatOpen ? (
               <>
                 <div className="mt-3 text-sm text-gray-600">
@@ -213,10 +234,10 @@ export default function EventDetailSheet({
             )}
           </div>
           
-          {/*  4. Report Pin Link  */}
+          {/* Report Pin Link */}
           <div className="mt-6 text-center">
             <button
-              onClick={() => setIsReportModalOpen(true)} // <-- Opens the new modal
+              onClick={() => setIsReportModalOpen(true)} // Opens the modal (if added)
               className="text-sm text-gray-500 hover:text-red-600 hover:underline"
             >
               Report Pin
@@ -224,12 +245,6 @@ export default function EventDetailSheet({
           </div>
         </div>
       </div>
-
-      {/*  5. RENDER THE REPORT MODAL  */}
-\      <ReportModal
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-      />
     </div>
   );
 }

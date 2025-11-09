@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     // Add "light" to force light theme
-    <html lang="en" className="light">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
