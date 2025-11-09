@@ -55,13 +55,13 @@ export default function AdvisorPage() {
   };
 
   return (
-    // Main container: Full screen, flex column
+    // Main container
     <div className="flex h-full w-screen flex-col bg-gray-50">
       
       {/* 1. Top Bar (Fixed) */}
       <TopBar />
 
-      {/* 2. Scrollable Chat Area (pt-20 clears TopBar, pb-36 clears Input+Nav) */}
+      {/* 2. Scrollable Chat Area  */}
       <main className="flex-1 overflow-y-auto p-4 pt-20 pb-36 space-y-4">
         {messages.map((msg, index) => (
           <div
@@ -86,7 +86,7 @@ export default function AdvisorPage() {
       {/* 3. Fixed Bottom UI Container */}
       <div className="fixed bottom-0 left-0 right-0 z-10">
         
-        {/* Input Form (Fixed above the nav) */}
+        {/* Input Form  */}
         <form
           onSubmit={handleSubmit}
           className="flex gap-2 border-t border-gray-200 p-4"
