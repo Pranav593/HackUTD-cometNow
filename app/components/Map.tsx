@@ -19,7 +19,7 @@ interface Building {
 interface MapProps {
   events: EventData[];
   activeFilter: MainFilter;
-  selectedCategory: string;
+  selectedCategories: string[]; // support multi-select categories
   onPinClick: (event: EventData) => void;
 }
 
@@ -35,7 +35,7 @@ const UTD_BOUNDS: L.LatLngBoundsExpression = [ [32.980, -96.758], [32.995, -96.7
 export default function Map({
   events,
   activeFilter,
-  selectedCategory,
+  selectedCategories,
   onPinClick,
 }: MapProps) {
   const [buildings, setBuildings] = useState<Building[]>([]);
@@ -63,21 +63,21 @@ export default function Map({
     } else if (activeFilter === "Recommended") {
       eventsToShow = eventsToShow
         .filter((event) => new Date(event.endTime) >= now)
-        .sort((a, b) => b.going - a.going);
+        .sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
     } else {
       eventsToShow = eventsToShow.filter(
         (event) => new Date(event.endTime) >= now
       );
     }
 
-    if (selectedCategory !== "All") {
+    if (selectedCategories.length > 0) {
       eventsToShow = eventsToShow.filter(
-        (event) => event.category === selectedCategory
+        (event) => selectedCategories.includes(event.category)
       );
     }
 
     return eventsToShow;
-  }, [events, activeFilter, selectedCategory]);
+  }, [events, activeFilter, selectedCategories]);
 
   return (
     <MapContainer
