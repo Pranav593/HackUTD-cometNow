@@ -64,6 +64,7 @@ export default function Map({
     } else if (activeFilter === "Recommended") {
       eventsToShow = eventsToShow
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         .filter((event) => new Date(event.endTime) >= now)
 =======
         .filter((event) => getEventEnd(event) >= now)
@@ -77,7 +78,23 @@ export default function Map({
       eventsToShow = eventsToShow.filter(
         (event) => selectedCategories.includes(event.category)
       );
+=======
+        .filter((event) => getEventEnd(event) >= now)
+        .sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
+    } else {
+      eventsToShow = eventsToShow.filter((event) => getEventEnd(event) >= now);
+>>>>>>> Stashed changes
     }
+
+    // Exclude expired=true for safety
+    eventsToShow = eventsToShow.filter(e => !e.expired);
+
+    // Debug visibility for why items may not show
+    try {
+      console.log(
+        `[Map] events in=${events.length}, after filter=${eventsToShow.length}, filter=${activeFilter}, category=${selectedCategory}`
+      );
+    } catch {}
 
     // Exclude expired=true for safety
     eventsToShow = eventsToShow.filter(e => !e.expired);

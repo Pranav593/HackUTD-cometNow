@@ -36,13 +36,19 @@ export default function EventListView({
     });
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     // 2. Create "Trending" list
   const trendingEvents = [...nowEvents].sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
 =======
+=======
+>>>>>>> Stashed changes
     // 2. Create "Trending" list (handle optional going)
     const trendingEvents = [...nowEvents].sort(
       (a, b) => (b.going ?? 0) - (a.going ?? 0)
     );
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
     // 3. Group all events by category

@@ -18,7 +18,10 @@ import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot, orderBy } from "firebase/firestore";
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 // Use the unified EventData definition
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 import { EventData } from "./EventListItem";
