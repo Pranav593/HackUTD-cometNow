@@ -3,13 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+  "@auth0/nextjs-auth0": "^3.7.0",
     "@ducanh2912/next-pwa": "^10.2.9",
+    "firebase": "^12.5.0",
     "@heroicons/react": "^2.2.0",
     "leaflet": "^1.9.4",
     "next": "16.0.1",
