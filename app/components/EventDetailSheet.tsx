@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ReactNode, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   XMarkIcon,
   InformationCircleIcon,
@@ -15,24 +15,9 @@ import { useAuth } from "@/lib/authContext";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import ReportModal from "./ReportModal";
+import { EventData } from "./EventListItem"; // Clean import of EventData
 
-interface EventData {
-  [x: string]: ReactNode;
-  id: any;
-  title: string;
-  category: "Food" | "Social" | "Study" | string;
-  locationName: string;
-  startTime: string;
-  endTime: string;
-  coordinates: [number, number];
-  going?: number;
-import { EventData } from "./EventListItem";
-
-interface ChatMessage {
-  id: string;
-  userName: string;
-  text: string;
-}
+// Use EventData from EventListItem to avoid type conflicts
 
 interface ChatMessage {
   id: string;
@@ -88,6 +73,19 @@ const formatDate = (isoString: string) => {
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 // --- END UTILITIES ---
 
+// Remaining time formatter
+const formatRemainingTime = (ms: number) => {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  if (totalSeconds <= 0) return "Event Ended";
+  const days = Math.floor(totalSeconds / (3600 * 24));
+  const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m ${seconds}s`;
+};
+
 
 export default function EventDetailSheet({
   event,
@@ -103,6 +101,7 @@ export default function EventDetailSheet({
   const [chatMessage, setChatMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false); 
+  const [timeRemaining, setTimeRemaining] = useState("Calculating...");
 
   // --- ATTENDANCE CHECK EFFECT ---
   useEffect(() => {
@@ -151,20 +150,22 @@ export default function EventDetailSheet({
       chatContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages, isChatOpen]);
+  
+  // Timer for Ends In
+  useEffect(() => {
     if (!event) return;
-
     const calculateTime = () => {
-        const endTime = (event.endAtUtc
-          ? new Date(event.endAtUtc)
-          : new Date(`${event.date}T${event.endTime}`)
-        ).getTime();
-        const now = new Date().getTime();
-        const diff = endTime - now;
-        setTimeRemaining(formatRemainingTime(diff));
+      const endMs = (event.endAtUtc
+        ? new Date(event.endAtUtc)
+        : new Date(`${event.date}T${event.endTime}`)
+      ).getTime();
+      const diff = endMs - Date.now();
+      setTimeRemaining(formatRemainingTime(diff));
     };
-
-    calculateTime(); // Initial calculation
-    const timer = setInterval(calculateTime, 1000); // Update every second
+    calculateTime();
+    const timer = setInterval(calculateTime, 1000);
+    return () => clearInterval(timer);
+  }, [event]);
 
 
   if (!event) return null;
@@ -291,12 +292,12 @@ export default function EventDetailSheet({
             <div className="text-center">
               <span className="text-sm text-gray-500">Location</span>
               <p className="font-semibold text-gray-800">
-                {event.locationName}
+                {event.location}
               </p>
             </div>
             <div className="flex flex-col">
                 <span className="text-sm text-gray-500">Ends In</span>
-                <p className="font-semibold text-gray-800">45 min</p>
+                <p className="font-semibold text-gray-800">{timeRemaining}</p>
             </div>
           </div>
 
