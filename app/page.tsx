@@ -16,11 +16,11 @@ export default function Home() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
   const [isListViewOpen, setIsListViewOpen] = useState(false);
-  
+
   // New state for new filters
   const [activeFilter, setActiveFilter] = useState<MainFilter>("All");
   const [selectedCategory, setSelectedCategory] = useState("All"); // "All" or an EventCategory
-  
+
   const [allEvents, setAllEvents] = useState<EventData[]>([]);
 
   // Fetch events ONCE when the page loads
@@ -36,7 +36,7 @@ export default function Home() {
     setActiveFilter(filter);
     setIsListViewOpen(false); 
   };
-  
+
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setActiveFilter("All"); 
@@ -74,7 +74,6 @@ export default function Home() {
             events={allEvents}
             activeFilter={activeFilter}
             selectedCategory={selectedCategory}
-            // We removed the AI prop
           />
         </div>
 
@@ -96,11 +95,12 @@ export default function Home() {
             <BottomNav />
           </div>
         </div>
+        
       </div>
-      {/* --- End of the blur wrapper --- */}
+      {/* END OF BLURRED CONTENT WRAPPER */}
 
 
-      {/* LAYER 2: THE MODALS */}
+      {/* LAYER 2: THE MODALS (Remain outside the blur wrapper) */}
       <DropPinForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
