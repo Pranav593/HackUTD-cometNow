@@ -1,3 +1,7 @@
+/**
+ * RewardsPage
+ * Shows point balance, animated progress bar, and a simple raffle ticket flow.
+ */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,14 +14,11 @@ import {
 import { StarIcon } from "@heroicons/react/24/solid";
 import { useRewards } from "@/lib/rewardsContext";
 
-// --- NEW COMPONENT: Dynamic Points Bar ---
 const PointsBar = ({ currentPoints, maxPoints = 1000 }: { currentPoints: number, maxPoints?: number }) => {
   const [width, setWidth] = useState(0);
-  // Calculate percentage, capping at 100% just in case of overage
   const percentage = Math.min(100, (currentPoints / maxPoints) * 100);
   
   useEffect(() => {
-    // Animate the bar filling up on mount/point change
     setWidth(percentage);
   }, [percentage]);
 
@@ -34,16 +35,13 @@ const PointsBar = ({ currentPoints, maxPoints = 1000 }: { currentPoints: number,
     </div>
   );
 }
-// ------------------------------------------
 
-// Placeholder component for the Gift Icon
 const GiftPlaceholder = () => (
   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-700">
     <StarIcon className="h-8 w-8 text-white" />
   </div>
 );
 
-// Mock raffle data
 const RAFFLE = {
   prize: "$20 Starbucks Gift Card",
   cost: 50,
@@ -63,10 +61,8 @@ export default function RewardsPage() {
     <div className="flex h-full flex-col bg-gray-50">
       <TopBar />
 
-      {/* --- Page Content (Scrollable) --- */}
       <main className="flex-1 overflow-y-auto p-4 pt-24">
         
-        {/* Point Balance with Animation */}
         <div className="mb-8">
           <span className="text-sm font-medium text-gray-500">
             Current Balance:
@@ -77,7 +73,6 @@ export default function RewardsPage() {
           <PointsBar currentPoints={points} />
         </div>
 
-        {/* --- Raffle Card --- */}
         <div className="mb-6 rounded-lg bg-white p-4 shadow-md">
           <h2 className="mb-4 text-xl font-bold text-gray-800">
             Comet Raffle
@@ -116,11 +111,9 @@ export default function RewardsPage() {
           )}
         </div>
         
-        {/* --- How to Earn Section --- */}
         <HowToEarn />
       </main>
 
-      {/* --- Bottom Nav --- */}
       <BottomNav />
     </div>
   );
