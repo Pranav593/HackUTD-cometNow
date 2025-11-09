@@ -5,10 +5,10 @@ import L from "leaflet";
 import { useEffect, useState, useMemo } from "react";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import EventPin from "./EventPin";
-import { EventData } from "./EventListItem"; // Import EventData type
-import { MainFilter } from "./FilterBar"; // Import MainFilter type
+import { EventData } from "./EventListItem";
+import { MainFilter } from "./FilterBar";
 
-// Building interface (matches enriched_locations.json)
+// Building interface 
 interface Building {
   name: string;
   abbreviation: string;
@@ -16,15 +16,14 @@ interface Building {
   link: string;
 }
 
-
 interface MapProps {
-  events: EventData[]; // Accept all events
-  activeFilter: MainFilter; // "All", "Recommended", "Past"
-  selectedCategory: string; // "All", "Food", "Social", etc.
+  events: EventData[];
+  activeFilter: MainFilter;
+  selectedCategory: string;
   onPinClick: (event: EventData) => void;
 }
 
-
+// Constants 
 const invisibleIcon = L.divIcon({
   className: "invisible-icon",
   iconSize: [0, 0],
@@ -41,7 +40,7 @@ export default function Map({
 }: MapProps) {
   const [buildings, setBuildings] = useState<Building[]>([]);
 
-  
+  // Fetch building data 
   useEffect(() => {
     fetch("/enriched_locations.json")
       .then((res) => res.json())
@@ -52,29 +51,32 @@ export default function Map({
       .catch((err) => console.error("Error fetching building data:", err));
   }, []);
 
-  
   const filteredEvents = useMemo(() => {
+    
+    
+    if (!Array.isArray(events)) {
+      return [];
+    }
+
     const now = new Date();
     let eventsToShow = [...events];
 
-    // 1. Filter by Main Filter (All, Recommended, Past)
+    // Filter by Main Filter 
     if (activeFilter === "Past") {
       eventsToShow = eventsToShow.filter(
         (event) => new Date(event.endTime) < now
       );
+    } else if (activeFilter === "Recommended") {
+      eventsToShow = eventsToShow
+        .filter((event) => new Date(event.endTime) >= now)
+        .sort((a, b) => b.going - a.going);
     } else {
-      // For "All" and "Recommended", only show events that haven't ended
       eventsToShow = eventsToShow.filter(
         (event) => new Date(event.endTime) >= now
       );
-
-      if (activeFilter === "Recommended") {
-        
-        eventsToShow.sort((a, b) => b.going - a.going);
-      }
     }
 
-    // 2. Filter by Category
+    // Filter by Category 
     if (selectedCategory !== "All") {
       eventsToShow = eventsToShow.filter(
         (event) => event.category === selectedCategory
@@ -95,9 +97,9 @@ export default function Map({
       maxBoundsViscosity={1.0}
       scrollWheelZoom={true}
     >
-      {/* LAYER 1: Base Map) */}
+      {/* LAYER 1: Base Map  */}
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        attribution='&copy; <a href="https{s}://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https{s}://carto.com/attributions">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
       />
       
@@ -123,7 +125,7 @@ export default function Map({
         );
       })}
 
-      {/* LAYER 3: Renders the filteredEvents */}
+      {/* LAYER 3: Renders the new `filteredEvents`  */}
       <MarkerClusterGroup>
         {filteredEvents.map((event, index) => (
           <EventPin

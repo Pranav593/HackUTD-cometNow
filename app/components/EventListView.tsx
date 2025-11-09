@@ -8,26 +8,39 @@ interface EventListViewProps {
   isOpen: boolean;
   onClose: () => void;
   events: EventData[];
-  onEventClick: (event: EventData) => void; 
+  onEventClick: (event: EventData) => void;
 }
 
 export default function EventListView({
   isOpen,
   onClose,
   events,
-  onEventClick, 
+  onEventClick,
 }: EventListViewProps) {
   
   const { trendingEvents, categorizedEvents } = useMemo(() => {
+    
+    
+    if (!Array.isArray(events)) {
+      return { trendingEvents: [], categorizedEvents: {} };
+    }
+
     const now = new Date();
+    
+    // 1. Get "Now" events
     const nowEvents = events.filter(event => {
       const eventStart = new Date(event.startTime);
       const eventEnd = new Date(event.endTime);
       const hoursDiff = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
       return hoursDiff <= 1 && eventEnd > now;
     });
+
+    // 2. Create "Trending" list
     const trendingEvents = [...nowEvents].sort((a, b) => b.going - a.going);
+
+    // 3. Group all events by category
     const categorizedEvents = events.reduce((acc, event) => {
+      if (new Date(event.endTime) < now) return acc;
       if (!acc[event.category]) {
         acc[event.category] = [];
       }
@@ -39,6 +52,7 @@ export default function EventListView({
   }, [events]);
 
   return (
+    // Modal container 
     <div
       className={`
         absolute inset-0 z-20 transform transition-transform duration-300 ease-in-out
@@ -50,12 +64,12 @@ export default function EventListView({
         onClick={onClose}
       ></div>
 
-      
+      {/* The slide-up "sheet"  */}
       <div
         className="absolute bottom-0 left-0 right-0 z-30 flex max-h-[85vh] flex-col rounded-t-2xl bg-gray-100 shadow-xl"
         style={{ pointerEvents: "auto" }}
       >
-        {/* Header */}
+        {/* Header  */}
         <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-gray-200 bg-white p-4">
           <h2 className="text-2xl font-bold text-gray-800">All Events</h2>
           <button
@@ -66,7 +80,7 @@ export default function EventListView({
           </button>
         </div>
 
-        {/* Scrollable List Content */}
+        {/* Scrollable List Content  */}
         <div className="flex-1 overflow-y-auto p-4">
           {/* Trending Section */}
           <section className="mb-6">
@@ -80,7 +94,7 @@ export default function EventListView({
                   <EventListItem
                     key={`trending-${i}`}
                     event={event}
-                    onClick={() => onEventClick(event)} // <-- PASS CLICK
+                    onClick={() => onEventClick(event)}
                   />
                 ))
               ) : (
@@ -91,7 +105,7 @@ export default function EventListView({
             </div>
           </section>
 
-          {/* Categories Section */}
+          {/* Categories Section  */}
           <section>
             <h3 className="mb-3 flex items-center gap-2 text-xl font-bold text-gray-900">
               <TagIcon className="h-6 w-6 text-gray-500" />
@@ -108,7 +122,7 @@ export default function EventListView({
                       <EventListItem
                         key={`${category}-${i}`}
                         event={event}
-                        onClick={() => onEventClick(event)} 
+                        onClick={() => onEventClick(event)}
                       />
                     ))}
                   </div>
