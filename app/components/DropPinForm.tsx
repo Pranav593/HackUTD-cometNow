@@ -1,4 +1,9 @@
-// app/components/DropPinForm.tsx
+/**
+ * DropPinForm
+ * Modal sheet for creating a new event pin. Handles description, category,
+ * location lookup, date/time (year fixed to 2025), validation (content + time),
+ * coordinate resolution from enriched_locations.json, and Firestore persistence.
+ */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -25,9 +30,8 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState<string>("Other");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Keep year fixed to 2025; only allow editing month & day
   const YEAR = "2025";
-  const [dateMD, setDateMD] = useState(""); // format MM-DD
+  const [dateMD, setDateMD] = useState("");
   const [startTime, setStartTime] = useState("9:00");
   const [startTimeAmPm, setStartTimeAmPm] = useState<"AM" | "PM">("AM");
   const [endTime, setEndTime] = useState("10:00");
@@ -50,7 +54,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
     setShowInfo(false);
   };
 
-  // Load location names from public/enriched_locations.json
   useEffect(() => {
     const loadLocations = async () => {
       try {
@@ -63,7 +66,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
           ...buildings.map((b: any) => b?.name).filter(Boolean),
           ...housing.map((h: any) => h?.name).filter(Boolean),
         ];
-        // Deduplicate while preserving order
         const seen = new Set<string>();
         const unique = names.filter((n) => {
           if (seen.has(n)) return false;
@@ -73,7 +75,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
   console.log("[DropPinForm] Loaded location options:", unique.length);
         setLocationOptions(unique);
       } catch (e) {
-        // Silently ignore; allow free-text entry
         console.error("[DropPinForm] Failed to load location options", e);
       }
     };
@@ -92,11 +93,9 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
     }
   };
 
-  // Lightweight cache for location data to avoid refetching inside submit
   const [locationData, setLocationData] = useState<any | null>(null);
 
   useEffect(() => {
-    // Preload enriched locations for lookup
     fetch("/enriched_locations.json")
       .then(r => r.json())
       .then(data => {
@@ -114,14 +113,11 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
       ...(Array.isArray(locationData.buildings) ? locationData.buildings : []),
       ...(Array.isArray(locationData.university_housing) ? locationData.university_housing : []),
     ];
-    // Exact name match first
     let match = pools.find(b => b.name === locName);
     if (!match) {
-      // Case-insensitive name match
       match = pools.find(b => typeof b.name === 'string' && b.name.toLowerCase() === locName.toLowerCase());
     }
     if (!match) {
-      // Try abbreviation containment (user may type abbreviation)
       match = pools.find(b => typeof b.abbreviation === 'string' && b.abbreviation.toLowerCase() === locName.toLowerCase());
     }
     if (!match || !match.coordinate) return null;
@@ -136,7 +132,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
     setIsSubmitting(true);
   console.log("[DropPinForm] handleSubmit start");
 
-    // Check for inappropriate content
     const { isInappropriate } = containsInappropriateContent(description);
     if (isInappropriate) {
       setDescriptionError("Please remove inappropriate content before submitting.");
@@ -148,7 +143,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
     const [mm, dd] = (dateMD || "").split("/");
     const fullDate = mm && dd ? `${YEAR}-${mm}-${dd}` : "";
 
-    // Convert 12-hour time to 24-hour format
     const to24Hour = (time: string, ampm: "AM" | "PM") => {
       let [hours, minutes] = time.split(":").map(Number);
       minutes = isNaN(minutes) ? 0 : minutes;
@@ -167,7 +161,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
       return;
     }
 
-    // Ensure location data is available, fetch inline if not yet loaded
     let coords = lookupCoordinates(location);
     if (!coords) {
       try {
@@ -187,18 +180,15 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
       coords = [0, 0];
     }
 
-    // Build UTC timestamps
     let startAtUtc: string | undefined;
     let endAtUtc: string | undefined;
     if (fullDate) {
-      // Convert Dallas wall-clock time to UTC correctly regardless of client timezone
       const toUtcFromDallas = (hhmm: string) =>
         fromZonedTime(`${fullDate}T${hhmm}:00`, 'America/Chicago').toISOString();
       startAtUtc = toUtcFromDallas(to24Hour(startTime, startTimeAmPm));
       endAtUtc = toUtcFromDallas(to24Hour(endTime, endTimeAmPm));
     }
 
-    // Prevent past scheduling (startAt must be in future by at least 1 minute)
     if (startAtUtc) {
       const startMs = Date.parse(startAtUtc);
       const nowMs = Date.now();
@@ -250,7 +240,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
         console.warn("[DropPinForm] updateDoc(id) failed — proceeding anyway", updErr);
       }
 
-  // Award points for event creation (hardcoded +25)
   try { awardEventCreation(); } catch (e) { console.warn('[Rewards] event creation award failed', e); }
 
   onClose(); // Close form on successful submission
@@ -265,14 +254,12 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
   };
 
   return (
-    // Main modal wrapper
     <div
       className={`
         absolute inset-0 z-20 transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-y-0" : "translate-y-full"}
       `}
     >
-      {/* Background overlay */}
       <div
         className="absolute inset-0"
         onClick={() => {
@@ -282,12 +269,10 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
         }}
       ></div>
 
-      {/* The white form "sheet" */}
       <div
   className="absolute bottom-0 left-0 right-0 z-30 flex max-h-[85vh] flex-col rounded-t-2xl bg-white p-6 shadow-xl dark:bg-gray-800"
         style={{ pointerEvents: "auto" }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
           <div className="flex items-center gap-2">
             <div className="h-6 w-6 rounded-full bg-orange-600"></div>
@@ -307,7 +292,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
           </button>
         </div>
 
-        {/* Form Content */}
         <div className="flex-1 overflow-y-auto pt-6">
           <h1 className="mb-6 text-3xl font-bold text-gray-900 dark:text-white">
             What's Happening, Comets?
@@ -319,7 +303,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
                 {formError}
               </div>
             )}
-            {/* Description */}
             <div className="relative">
               {showInfo && (
                 <div className="absolute right-0 -top-14 w-full max-w-xs rounded-lg bg-gray-700 p-2 text-xs text-white shadow-lg dark:bg-gray-900">
@@ -348,7 +331,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
               </div>
             </div>
 
-            {/* Category */}
             <div>
               <label htmlFor="category" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Category
@@ -375,7 +357,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
               </select>
             </div>
 
-            {/* Location (combobox using datalist) */}
             <div>
               <label htmlFor="location" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Location
@@ -396,7 +377,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
               </select>
             </div>
 
-            {/* Date (Year fixed to 2025; editable MM/DD with backspace removing last digit) */}
             <div>
               <label htmlFor="dateMD" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Date
@@ -445,7 +425,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
               </div>
             </div>
 
-            {/* Time range */}
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <label htmlFor="startTime" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -525,7 +504,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
               </div>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isSubmitting}
@@ -540,7 +518,6 @@ export default function DropPinForm({ isOpen, onClose, onCreated }: DropPinFormP
           </form>
         </div>
 
-        {/* Mobile home bar */}
         <div className="mt-4 h-1 w-32 self-center rounded-full bg-gray-300 dark:bg-gray-600"></div>
       </div>
     </div>

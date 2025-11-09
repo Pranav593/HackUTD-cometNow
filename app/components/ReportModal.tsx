@@ -1,4 +1,7 @@
-// app/components/ReportModal.tsx
+/**
+ * ReportModal
+ * Simple modal for reporting an event with a reason and optional details.
+ */
 "use client";
 
 import { useState } from "react";
@@ -29,17 +32,13 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
   };
 
   return (
-    // This modal sits on top of everything (z-40)
     <div className="absolute inset-0 z-40 flex items-center justify-center p-4">
-      {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 
-      {/* Content */}
       <div className="relative z-50 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Report Event</h3>
           <button
@@ -49,7 +48,6 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
           </button>
         </div>
 
-        {/* Report Reasons */}
         <div className="mt-4 space-y-3">
           {reportReasons.map((r) => (
             <label key={r} className="flex items-center gap-3">
@@ -73,7 +71,6 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
           />
         </div>
 
-        {/* Action Buttons */}
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"

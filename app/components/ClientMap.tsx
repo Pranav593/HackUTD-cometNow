@@ -1,10 +1,13 @@
-// app/components/ClientMap.tsx
+/**
+ * ClientMap
+ * Dynamically loads the Map component client-side only (no SSR) to
+ * avoid Leaflet SSR issues and show a lightweight loading fallback.
+ */
 "use client";
 
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
 
-// 1. Accept `props`
 export default function ClientMap(props: any) {
   const Map = useMemo(
     () =>

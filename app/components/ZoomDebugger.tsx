@@ -1,16 +1,19 @@
+/**
+ * ZoomDebugger
+ * Dev overlay that displays current Leaflet zoom level. Useful while tuning
+ * zoom-dependent UI behavior. Not interactive (pointer-events: none).
+ */
 "use client";
 
 import { useMapEvents } from 'react-leaflet';
 import { useState } from 'react';
 
 export default function ZoomDebugger() {
-  const [zoomLevel, setZoomLevel] = useState(15); // Start with your default zoom
+  const [zoomLevel, setZoomLevel] = useState(15);
 
   const map = useMapEvents({
     zoomend: () => {
-      // This is called every time the user finishes zooming
       setZoomLevel(map.getZoom());
-      // Log the zoom level to the browser console for manual tracking
       console.log('Current Leaflet Zoom Level:', map.getZoom());
     },
   });

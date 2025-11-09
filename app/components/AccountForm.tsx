@@ -1,4 +1,9 @@
-// app/components/AccountForm.tsx
+/**
+ * AccountForm
+ * - Displays and saves the user's profile (name, email) and preferences.
+ * - Loads/saves data from Firestore and provides a searchable UTD majors input,
+ *   academic year selector, and interest toggles.
+ */
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -8,8 +13,6 @@ import { db } from "@/lib/firebase";
 import { CheckIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { UTD_MAJORS } from "@/lib/majors";
 
-// Imported from shared list
-
 export default function AccountForm() {
   const { user, logout } = useAuth();
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -18,9 +21,8 @@ export default function AccountForm() {
   const [email, setEmail] = useState("");
   const [initialMajorLoaded, setInitialMajorLoaded] = useState(false);
 
-  // --- FORM STATE ---
   const [selectedMajor, setSelectedMajor] = useState("");
-  const [year, setYear] = useState(""); // New state for year
+  const [year, setYear] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [notifySocial, setNotifySocial] = useState(true);
   const [notifyFood, setNotifyFood] = useState(true);
@@ -31,17 +33,15 @@ export default function AccountForm() {
   const [isSaved, setIsSaved] = useState(false);
   const [majorError, setMajorError] = useState<string | null>(null);
 
-  // Academic Years
   const academicYears = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
 
-  // This filters the major list in real-time
   const filteredMajors = useMemo(() => {
     if (!searchQuery) {
-      return []; // Don't show any majors unless searching
+      return [];
     }
     return UTD_MAJORS.filter((major) =>
       major.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 5); // Only show top 5 results
+    ).slice(0, 5);
   }, [searchQuery]);
 
   useEffect(() => {
@@ -72,7 +72,6 @@ export default function AccountForm() {
             setNotifyRecreation(Boolean(data.interests.recreation));
           }
         } else {
-          // If no profile, set name from auth
           setName(user.displayName || "");
         }
       } catch (err) {
@@ -123,7 +122,6 @@ export default function AccountForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-      {/* --- Account Info Card --- */}
       <section className="rounded-lg bg-white p-6 shadow-md">
         <h2 className="text-xl font-bold text-gray-800">Account</h2>
         <div className="mt-4 flex flex-col gap-4">
@@ -151,14 +149,12 @@ export default function AccountForm() {
         </div>
       </section>
 
-      {/* --- Preferences Card --- */}
       <section className="rounded-lg bg-white p-6 shadow-md">
         <h2 className="text-xl font-bold text-gray-800">Preferences</h2>
         <p className="mt-1 text-sm text-gray-500">
           This helps us recommend events you'll care about.
         </p>
-        
-        {/* Searchable Major Input */}
+
         <div className="mt-6">
           <label htmlFor="major-search" className="block text-sm font-medium text-gray-700">
             Your Major
@@ -179,7 +175,6 @@ export default function AccountForm() {
               className="w-full rounded-md border border-gray-300 bg-white py-3 pl-10 pr-4 text-gray-900 shadow-sm focus:border-orange-500 focus:ring-orange-500"
             />
           </div>
-          {/* --- Search Results --- */}
           {filteredMajors.length > 0 && (
             <div className="mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg">
               {filteredMajors.map((major) => (
@@ -188,7 +183,7 @@ export default function AccountForm() {
                   key={major}
                   onClick={() => {
                     setSelectedMajor(major);
-                    setSearchQuery(major); // Set input text to the selection
+                    setSearchQuery(major);
                   }}
                   className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50"
                 >
@@ -197,7 +192,6 @@ export default function AccountForm() {
               ))}
             </div>
           )}
-          {/* Display the selected major */}
           {selectedMajor && (
             <p className="mt-2 text-sm text-gray-600">
               Selected: <span className="font-semibold text-orange-600">{selectedMajor}</span>
@@ -205,7 +199,6 @@ export default function AccountForm() {
           )}
         </div>
 
-        {/* Academic Year */}
         <div className="mt-6">
           <label htmlFor="academic-year" className="block text-sm font-medium text-gray-700">
             Your Year
@@ -223,7 +216,6 @@ export default function AccountForm() {
           </select>
         </div>
 
-        {/* Event Type Interests */}
         <div className="mt-6">
           <label className="block text-sm font-medium text-gray-700">
             I'm interested in...
@@ -239,7 +231,6 @@ export default function AccountForm() {
         </div>
       </section>
 
-      {/* --- Save Button --- */}
       <div className="flex items-center gap-4 px-2">
         <button
           type="submit"
@@ -266,7 +257,10 @@ export default function AccountForm() {
   );
 }
 
-// --- Helper Checkbox Component ---
+/**
+ * Checkbox
+ * Simple labeled checkbox used in AccountForm's interests section.
+ */
 function Checkbox({
   label,
   checked,

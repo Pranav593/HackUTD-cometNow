@@ -18,7 +18,6 @@ export default function HowToEarn() {
             </p>
           </div>
         </div>
-        {/* Removed "Verify a Pin" section as requested */}
         <div className="flex items-start gap-3">
           <ChatBubbleLeftRightIcon className="mt-1 h-6 w-6 flex-shrink-0 text-orange-600" />
           <div>

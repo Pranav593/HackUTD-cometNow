@@ -8,12 +8,6 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// --- PROPS ARE NO LONGER NEEDED ---
-// interface BottomNavProps {
-//   onChatClick: () => void;
-//   isChatOpen: boolean;
-// }
-
 export default function BottomNav() {
   const pathname = usePathname();
 
@@ -25,7 +19,6 @@ export default function BottomNav() {
         paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
       }}
     >
-      {/* --- Map Link --- */}
       <Link href="/" className="flex flex-col items-center gap-1">
         <MapIcon
           className={`h-7 w-7 ${
@@ -41,7 +34,6 @@ export default function BottomNav() {
         </span>
       </Link>
 
-      {/* --- Rewards Link --- */}
       <Link href="/rewards" className="flex flex-col items-center gap-1">
         <GiftIcon
           className={`h-7 w-7 ${
@@ -57,7 +49,6 @@ export default function BottomNav() {
         </span>
       </Link>
 
-      {/* --- 3. UPDATED: AI Chat Link --- */}
       <Link href="/advisor" className="flex flex-col items-center gap-1">
         <SparklesIcon
           className={`h-7 w-7 ${
@@ -73,7 +64,6 @@ export default function BottomNav() {
         </span>
       </Link>
 
-      {/* --- Account Link --- */}
       <Link href="/account" className="flex flex-col items-center gap-1">
         <UserCircleIcon
           className={`h-7 w-7 ${

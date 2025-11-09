@@ -1,15 +1,21 @@
+/**
+ * EventPin
+ * Leaflet marker for an event. Pin color indicates timing:
+ * - green: ongoing or starting within 1 hour
+ * - gray: future (>1 hour)
+ * - orange: past
+ */
 "use client";
 
 import { Marker, Tooltip } from "react-leaflet";
 import L from "leaflet";
-import { EventData } from "./EventListItem"; // Import EventData
+import { EventData } from "./EventListItem";
 
 interface EventPinProps {
   event: EventData;
   onPinClick: (event: EventData) => void;
 }
 
-// Icon path (unchanged)
 const ICONS = {
   bolt: 'M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z',
 };
@@ -26,9 +32,8 @@ const getPinStyle = (event: EventData) => {
   
   const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4 text-white" fill="currentColor"><path d="${ICONS.bolt}" /></svg>`;
   
-  // Coloring rule: green if happening now or starting within 1 hour; grey for future beyond 1 hour; orange if past.
   if (eventEnd < now) {
-    return { bgColor: "bg-orange-600", iconHtml }; // past
+    return { bgColor: "bg-orange-600", iconHtml };
   }
   const hoursDiff = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
   if (hoursDiff <= 1) {
@@ -38,9 +43,7 @@ const getPinStyle = (event: EventData) => {
 };
 
 export default function EventPin({ event, onPinClick }: EventPinProps) {
-  // Skip rendering if coordinates are missing
   if (!event.coordinates || event.coordinates[0] === 0) {
-    // Provide debug visibility when coordinates are missing or default
     try { console.warn('[EventPin] Skipping pin due to missing/zero coordinates', event.title, event.coordinates); } catch {}
     return null;
   }
