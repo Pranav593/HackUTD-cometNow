@@ -42,14 +42,14 @@ export default function AdvisorPage() {
     e.preventDefault();
     if (!input) return;
 
-    const currentInput = input;
-    const userMessage = { sender: "user", text: currentInput };
+  const currentInput = input;
+  const userMessage: Message = { sender: "user", text: currentInput };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
     // Mock AI response
     setTimeout(() => {
-      const aiMessage = { sender: "ai", text: `I'm a mock response for: "${currentInput}"` };
+      const aiMessage: Message = { sender: "ai", text: `I'm a mock response for: "${currentInput}"` };
       setMessages((prev) => [...prev, aiMessage]);
     }, 1000);
   };
