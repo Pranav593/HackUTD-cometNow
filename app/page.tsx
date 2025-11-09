@@ -34,12 +34,12 @@ export default function Home() {
   // --- Handlers for the FilterBar ---
   const handleFilterChange = (filter: MainFilter) => {
     setActiveFilter(filter);
-    setIsListViewOpen(false);
+    setIsListViewOpen(false); 
   };
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    setActiveFilter("All");
+    setActiveFilter("All"); 
     setIsListViewOpen(false);
   };
 
@@ -47,12 +47,26 @@ export default function Home() {
     setIsListViewOpen(true);
   };
 
+  // --- THIS IS THE NEW HANDLER THAT FIXES THE BUG ---
+  // This function is passed to the List View
+  const handleEventFromListClick = (event: EventData) => {
+    setIsListViewOpen(false); // Close the list
+    setSelectedEvent(event); // Open the detail sheet
+  };
+  // --------------------------------------------------
+
+  // This variable controls the blur
+  const isModalOpen = isFormOpen || isListViewOpen || selectedEvent != null;
+
   return (
     <main className="relative h-screen overflow-hidden">
       
-      {/* BLURRED CONTENT WRAPPER */}
-      <div className={isFormOpen ? "relative h-full w-full blur-sm transition duration-200" : "relative h-full w-full transition duration-200"}>
-        
+      {/* --- This is your dev's Blur Wrapper --- */}
+      <div
+        className={`relative h-full w-full transition-all duration-300
+          ${isModalOpen ? "blur-sm" : ""}
+        `}
+      >
         {/* LAYER 0: THE MAP */}
         <div className="absolute inset-0 z-0">
           <ClientMap
@@ -98,11 +112,8 @@ export default function Home() {
       <EventListView
         isOpen={isListViewOpen}
         onClose={() => setIsListViewOpen(false)}
-        events={allEvents} // Pass all events to the list view
-        onEventClick={(event) => {
-          setSelectedEvent(event);
-          setIsListViewOpen(false);
-        }}
+        events={allEvents}
+        onEventClick={handleEventFromListClick} // <-- THIS IS THE FIX
       />
     </main>
   );
