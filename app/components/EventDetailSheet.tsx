@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ReactNode } from "react";
+import { useState, useEffect, ReactNode, useCallback } from "react";
 import {
   XMarkIcon,
   InformationCircleIcon,
@@ -17,20 +17,6 @@ import { useAuth } from "@/lib/authContext";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, onSnapshot, orderBy } from "firebase/firestore";
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-// Use the unified EventData definition
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
-// Use the unified EventData definition
->>>>>>> parent of cafedcc (Add UTC time, expiration, and location to events)
 import { EventData } from "./EventListItem";
 
 interface ChatMessage {
@@ -39,8 +25,12 @@ interface ChatMessage {
   text: string;
 }
 
+interface EventWithDescription extends EventData {
+  description?: string;
+}
+
 interface EventDetailSheetProps {
-  event: EventData | null;
+  event: EventWithDescription | null;
   onClose: () => void;
 }
 
@@ -67,34 +57,82 @@ const EventIcon = ({ category }: { category: string }) => {
   );
 };
 
+// --- TIME UTILITIES ---
+const formatTime = (isoString: string) => {
+  return new Date(isoString).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatDate = (isoString: string) => {
+  return new Date(isoString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+// Helper to format remaining time
+const formatRemainingTime = (ms: number) => {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const days = Math.floor(totalSeconds / (3600 * 24));
+    const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (totalSeconds <= 0) return "Event Ended";
+
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m ${seconds}s`;
+}
 
 
 export default function EventDetailSheet({
   event,
   onClose,
 }: EventDetailSheetProps) {
-  // --- 2. ADD STATE FOR INTERACTIVITY ---
   const [goingCount, setGoingCount] = useState(event?.going || 0);
   const [isGoing, setIsGoing] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false); 
+  const [timeRemaining, setTimeRemaining] = useState("Calculating..."); // New state for timer
+  
   const { user } = useAuth();
+  const eventId = event?.id;
 
+  // Effect to check if user is going and set initial count
   useEffect(() => {
     if (!event || !user) return;
     const goingRef = doc(db, "going", `${user.uid}_${event.id}`);
     getDoc(goingRef).then((docSnap) => {
-      if (docSnap.exists()) {
-        setIsGoing(true);
-      } else {
-        setIsGoing(false);
-      }
+      setIsGoing(docSnap.exists());
     });
     setGoingCount(event.going || 0);
   }, [event, user]);
 
+  // Effect to manage time remaining timer
+  useEffect(() => {
+    if (!event) return;
+
+    const calculateTime = () => {
+        const endTime = new Date(event.endTime).getTime();
+        const now = new Date().getTime();
+        const diff = endTime - now;
+        setTimeRemaining(formatRemainingTime(diff));
+    };
+
+    calculateTime(); // Initial calculation
+    const timer = setInterval(calculateTime, 1000); // Update every second
+
+    return () => clearInterval(timer);
+  }, [event]);
+
+
+  // Effect to listen for live chat messages
   useEffect(() => {
     if (!event || !isChatOpen) return;
 
@@ -118,13 +156,6 @@ export default function EventDetailSheet({
 
 
   if (!event) return null;
-
-  const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const handleGoingClick = async () => {
     if (!user || !event) return;
@@ -171,6 +202,7 @@ export default function EventDetailSheet({
 
   const handleClose = () => {
     onClose();
+    // Reset state after the transition completes
     setTimeout(() => {
       setIsGoing(false);
       setGoingCount(0);
@@ -198,14 +230,12 @@ export default function EventDetailSheet({
         className="absolute bottom-0 left-0 right-0 z-30 flex max-h-[85vh] flex-col rounded-t-2xl bg-white p-6 shadow-xl"
         style={{ pointerEvents: "auto" }}
       >
-        {/* Header: Logo + Close Button (Updated) */}
+        {/* Header: Logo + Close Button */}
         <div className="flex items-center justify-between pb-4">
-          {/* --- 1. LOGO INTEGRATION --- */}
           <div className="flex items-center gap-2">
           <Image src="/hacklogo.png" alt="Logo" width={32} height={32} className="object-contain" /> 
             <span className="text-sm font-semibold text-gray-800">CometNow</span>
           </div>
-          {/* --------------------------- */}
           <button
             onClick={handleClose}
             className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
@@ -219,7 +249,6 @@ export default function EventDetailSheet({
         <div className="flex-1 overflow-y-auto">
           {/* Event Header */}
           <div className="flex items-center gap-4">
-            {/* --- 2. DYNAMIC EMOJI ICON --- */}
             <EventIcon category={event.category} />
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
@@ -227,16 +256,26 @@ export default function EventDetailSheet({
               </h1>
             </div>
           </div>
-          <div className="mt-4 flex justify-around rounded-lg bg-gray-50 p-4">
+          
+          {/* Details Bar */}
+          <div className="mt-4 grid grid-cols-3 rounded-lg bg-gray-50 p-4 divide-x divide-gray-200">
             <div className="text-center">
-              <span className="text-sm text-gray-500">Location</span>
-              <p className="font-semibold text-gray-800">
+              <span className="text-xs text-gray-500">Location</span>
+              <p className="font-semibold text-gray-800 text-sm">
                 {event.location}
               </p>
             </div>
-            <div className="flex flex-col">
-                <span className="text-sm text-gray-500">Ends In</span>
-                <p className="font-semibold text-gray-800">45 min</p>
+            <div className="text-center">
+              <span className="text-xs text-gray-500">Time</span>
+              <p className="font-semibold text-gray-800 text-sm">
+                {formatTime(event.startTime)} - {formatTime(event.endTime)}
+              </p>
+            </div>
+            <div className="text-center">
+                <span className="text-xs text-gray-500">Ends In</span>
+                <p className={`font-semibold text-sm ${timeRemaining === "Event Ended" ? "text-red-600" : "text-gray-800"}`}>
+                    {timeRemaining}
+                </p>
             </div>
           </div>
 
@@ -250,6 +289,15 @@ export default function EventDetailSheet({
                 Vibe: 🔥 Going fast! They just brought out more cheese.
             </p>
           </div>
+          
+          {/* Description (Added) */}
+          {event.description && (
+             <div className="mt-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Details</h3>
+                <p className="text-gray-600 text-sm">{event.description}</p>
+             </div>
+          )}
+
 
           {/* Action Buttons  */}
           <div className="mt-6 flex items-center gap-4">
@@ -259,15 +307,19 @@ export default function EventDetailSheet({
             </div>
             <button
               onClick={handleGoingClick}
-              disabled={isGoing}
+              disabled={timeRemaining === "Event Ended"} // Disable if event ended
               className={`flex-1 rounded-lg px-4 py-3 font-semibold text-white transition-colors
                 ${
                   isGoing
-                    ? "flex items-center justify-center gap-2 bg-green-600"
-                    : "bg-orange-600 hover:bg-orange-700"
+                    ? "flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
+                    : timeRemaining === "Event Ended"
+                        ? "bg-gray-400 cursor-not-allowed" // Gray out if ended
+                        : "bg-orange-600 hover:bg-orange-700"
                 }`}
             >
-              {isGoing ? (
+              {timeRemaining === "Event Ended" ? (
+                  "Event Ended"
+              ) : isGoing ? (
                 <>
                   <CheckIcon className="h-5 w-5" />
                   You're Coming!
@@ -287,9 +339,13 @@ export default function EventDetailSheet({
              {!isChatOpen ? (
               <>
                 <div className="mt-3 text-sm text-gray-600">
-                  {messages.slice(-2).map((msg) => (
-                    <p key={msg.id}><span className="font-semibold">{msg.userName}:</span> {msg.text}</p>
-                  ))}
+                  {messages.length > 0 ? (
+                    messages.slice(-2).map((msg) => (
+                      <p key={msg.id}><span className="font-semibold">{msg.userName}:</span> {msg.text}</p>
+                    ))
+                  ) : (
+                    <p className="italic text-gray-500">No messages yet. Be the first!</p>
+                  )}
                 </div>
                 <button
                   onClick={() => setIsChatOpen(true)}
@@ -301,9 +357,13 @@ export default function EventDetailSheet({
             ) : (
               <>
                 <div className="mt-4 h-32 overflow-y-auto rounded-lg border bg-white p-2">
-                  {messages.map((msg) => (
-                    <p key={msg.id} className="text-sm text-gray-600"><span className="font-semibold">{msg.userName}:</span> {msg.text}</p>
-                  ))}
+                  {messages.length > 0 ? (
+                    messages.map((msg) => (
+                      <p key={msg.id} className="text-sm text-gray-600"><span className="font-semibold">{msg.userName}:</span> {msg.text}</p>
+                    ))
+                  ) : (
+                    <p className="italic text-gray-500 text-center py-4">Start the conversation!</p>
+                  )}
                 </div>
                 <form
                   onSubmit={handleChatSubmit}
@@ -314,11 +374,12 @@ export default function EventDetailSheet({
                     value={chatMessage}
                     onChange={(e) => setChatMessage(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900"
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:ring-orange-500 focus:border-orange-500"
                   />
                   <button
                     type="submit"
-                    className="rounded-lg bg-orange-600 p-2 text-white"
+                    disabled={!chatMessage.trim()}
+                    className="rounded-lg bg-orange-600 p-2 text-white disabled:bg-gray-400"
                   >
                     <PaperAirplaneIcon className="h-5 w-5" />
                   </button>
@@ -328,9 +389,9 @@ export default function EventDetailSheet({
           </div>
           
           {/* Report Pin Link */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center pb-8">
             <button
-              onClick={() => setIsReportModalOpen(true)} // Opens the modal (if added)
+              onClick={() => setIsReportModalOpen(true)}
               className="text-sm text-gray-500 hover:text-red-600 hover:underline"
             >
               Report Pin
@@ -339,7 +400,7 @@ export default function EventDetailSheet({
         </div>
       </div>
 
-      {/*  5. RENDER THE REPORT MODAL  */}
+      {/* Render the Report Modal */}
       <ReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}

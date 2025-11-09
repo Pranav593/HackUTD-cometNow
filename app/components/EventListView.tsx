@@ -20,51 +20,31 @@ export default function EventListView({
   
   const { trendingEvents, categorizedEvents } = useMemo(() => {
     
-    
+    // Safety check for events array
     if (!Array.isArray(events)) {
       return { trendingEvents: [], categorizedEvents: {} };
     }
 
     const now = new Date();
     
-    // 1. Get "Now" events
+    // 1. Get "Now" events: starting within 1 hour AND not yet ended
     const nowEvents = events.filter(event => {
       const eventStart = new Date(event.startTime);
       const eventEnd = new Date(event.endTime);
+      // Hours difference: (startTime - now) / (ms in an hour)
       const hoursDiff = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
       return hoursDiff <= 1 && eventEnd > now;
     });
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    // 2. Create "Trending" list
-  const trendingEvents = [...nowEvents].sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-    // 2. Create "Trending" list (handle optional going)
-    const trendingEvents = [...nowEvents].sort(
-      (a, b) => (b.going ?? 0) - (a.going ?? 0)
-    );
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
-    // 2. Create "Trending" list
-  const trendingEvents = [...nowEvents].sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
->>>>>>> parent of cafedcc (Add UTC time, expiration, and location to events)
+    // 2. Create "Trending" list: Use "Now" events, sort by 'going' count (descending, handling null/undefined with ?? 0)
+    const trendingEvents = [...nowEvents].sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
 
-    // 3. Group all events by category
+    // 3. Group all future events by category
     const categorizedEvents = events.reduce((acc, event) => {
+      // Skip events that have already ended
       if (new Date(event.endTime) < now) return acc;
+      
+      // Group by category
       if (!acc[event.category]) {
         acc[event.category] = [];
       }

@@ -3,6 +3,7 @@
 import { MapContainer, TileLayer, Tooltip, Marker } from "react-leaflet";
 import L from "leaflet";
 import { useEffect, useState, useMemo } from "react";
+// Ensure this package is installed: npm install react-leaflet-markercluster leaflet.markercluster
 import MarkerClusterGroup from "react-leaflet-markercluster"; 
 import EventPin from "./EventPin";
 import { EventData } from "./EventListItem";
@@ -21,6 +22,11 @@ interface MapProps {
   activeFilter: MainFilter;
   selectedCategories: string[]; // support multi-select categories
   onPinClick: (event: EventData) => void;
+}
+
+// Helper to safely check optional `expired` flag on events
+function hasExpired(e: unknown): e is { expired?: boolean } {
+  return !!e && typeof e === "object" && "expired" in e;
 }
 
 // Constants 
@@ -51,78 +57,44 @@ export default function Map({
       .catch((err) => console.error("Error fetching building data:", err));
   }, []);
 
-  // Filtering Logic (unchanged)
+  // Filtering Logic (FIXED and CLEANED)
   const filteredEvents = useMemo(() => {
     const now = new Date();
     let eventsToShow = [...events];
 
+    // --- 1. Filter by Active Filter (Past/Recommended/Upcoming) ---
     if (activeFilter === "Past") {
+      // Show events that have already ended
       eventsToShow = eventsToShow.filter(
         (event) => new Date(event.endTime) < now
       );
     } else if (activeFilter === "Recommended") {
+      // Show future events, sorted by 'going' count (trending)
       eventsToShow = eventsToShow
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
         .filter((event) => new Date(event.endTime) >= now)
-=======
-        .filter((event) => getEventEnd(event) >= now)
->>>>>>> Stashed changes
-=======
-        .filter((event) => getEventEnd(event) >= now)
->>>>>>> Stashed changes
-=======
-        .filter((event) => new Date(event.endTime) >= now)
->>>>>>> parent of cafedcc (Add UTC time, expiration, and location to events)
         .sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
     } else {
+      // 'Upcoming' or default: Show only future events
       eventsToShow = eventsToShow.filter(
         (event) => new Date(event.endTime) >= now
       );
     }
 
+    // --- 2. Filter by Selected Categories (if any) ---
     if (selectedCategories.length > 0) {
-      eventsToShow = eventsToShow.filter(
-        (event) => selectedCategories.includes(event.category)
-      );
-=======
-        .filter((event) => getEventEnd(event) >= now)
-        .sort((a, b) => (b.going ?? 0) - (a.going ?? 0));
-    } else {
-      eventsToShow = eventsToShow.filter((event) => getEventEnd(event) >= now);
->>>>>>> Stashed changes
+    // --- 3. Safety filter for expired flag ---
+    // If the event data includes an `expired` property, ensure we exclude them
+    eventsToShow = eventsToShow.filter((e) => !(hasExpired(e) && e.expired === true));
     }
 
-<<<<<<< HEAD
-    // Exclude expired=true for safety
-    eventsToShow = eventsToShow.filter(e => !e.expired);
+    // --- 3. Safety filter for expired flag ---
+    // If the event data includes an `expired` property, ensure we exclude them
+    eventsToShow = eventsToShow.filter((e) => !(hasExpired(e) && e.expired));
 
-    // Debug visibility for why items may not show
-    try {
-      console.log(
-        `[Map] events in=${events.length}, after filter=${eventsToShow.length}, filter=${activeFilter}, category=${selectedCategory}`
-      );
-    } catch {}
+    // [DEBUGGING LOG REMOVED] - Removed console.log for cleaner code submission
 
-<<<<<<< Updated upstream
-    // Exclude expired=true for safety
-    eventsToShow = eventsToShow.filter(e => !e.expired);
-
-    // Debug visibility for why items may not show
-    try {
-      console.log(
-        `[Map] events in=${events.length}, after filter=${eventsToShow.length}, filter=${activeFilter}, category=${selectedCategory}`
-      );
-    } catch {}
-
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> parent of cafedcc (Add UTC time, expiration, and location to events)
     return eventsToShow;
-  }, [events, activeFilter, selectedCategories]);
+  }, [events, activeFilter, selectedCategories]); // Dependencies updated for stability
 
   return (
     <MapContainer
@@ -167,6 +139,7 @@ export default function Map({
       {/* LAYER 3: Event Pins with Clustering */}
       <MarkerClusterGroup>
         {filteredEvents.map((event, index) => (
+          // Assumes EventPin handles event location existence checks
           <EventPin
             key={`${event.title}-${index}`}
             event={event}
