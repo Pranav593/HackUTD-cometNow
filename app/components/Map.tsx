@@ -65,7 +65,11 @@ export default function Map({
       eventsToShow = eventsToShow
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         .filter((event) => new Date(event.endTime) >= now)
+=======
+        .filter((event) => getEventEnd(event) >= now)
+>>>>>>> Stashed changes
 =======
         .filter((event) => getEventEnd(event) >= now)
 >>>>>>> Stashed changes
@@ -96,6 +100,7 @@ export default function Map({
       );
     } catch {}
 
+<<<<<<< Updated upstream
     // Exclude expired=true for safety
     eventsToShow = eventsToShow.filter(e => !e.expired);
 
@@ -106,6 +111,8 @@ export default function Map({
       );
     } catch {}
 
+=======
+>>>>>>> Stashed changes
     return eventsToShow;
   }, [events, activeFilter, selectedCategories]);
 

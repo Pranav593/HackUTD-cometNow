@@ -19,7 +19,10 @@ import { doc, setDoc, deleteDoc, getDoc, updateDoc, increment, collection, addDo
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 // Use the unified EventData definition
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
