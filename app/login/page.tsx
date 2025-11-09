@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/authContext';
+import { useAuth } from '@/lib/authContext'; 
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,16 +26,18 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+    
+
     try {
       if (mode === 'login') {
         await login(email, password);
         router.replace('/');
       } else {
-  await signup(email, password, displayName.trim());
-        // After signup, go to onboarding
+        await signup(email, password, displayName.trim());
         router.replace('/onboarding');
       }
     } catch (err: any) {
+      // Safely access the error message
       setError(err?.message || 'Authentication failed');
     } finally {
       setSubmitting(false);
@@ -50,28 +53,40 @@ export default function LoginPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow">
-        <h1 className="text-2xl font-semibold mb-6 text-center">
-          {mode === 'login' ? 'Log in to CometNow' : 'Create your CometNow account'}
-        </h1>
+return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+        
+        {/* LOGO SECTION - Centered and Branded */}
+        <div className="flex flex-col items-center mb-10">
+          <Image src="/hacklogo.png" alt="Logo" width={70}height={70}className="object-contain" />
+          <h1 className="text-3xl font-extrabold text-gray-900">CometNow</h1>
+        </div>
+        
+        <h2 className="text-xl font-semibold mb-6 text-center text-gray-700">
+          {mode === 'login' ? 'Log in with your UTD Email' : 'Create your Comet Account'}
+        </h2>
 
+        {/* Error Display */}
         {error && (
-          <div className="mb-4 p-3 rounded bg-red-50 text-red-700 text-sm">{error}</div>
+          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* EMAIL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium text-gray-700">UTD Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="temoc@utdallas.edu"
+              className="mt-1 w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
             />
           </div>
+          
+          {/* DISPLAY NAME (SIGNUP ONLY) */}
           {mode === 'signup' && (
             <div>
               <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -81,10 +96,13 @@ export default function LoginPage() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 required
                 minLength={2}
-                className="mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Temoc Comet"
+                className="mt-1 w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
               />
             </div>
           )}
+          
+          {/* PASSWORD */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
@@ -92,29 +110,44 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              minLength={6}
+              className="mt-1 w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">At least 6 characters.</p>
           </div>
+          
+          {/* SUBMIT BUTTON - Branded Orange */}
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700 disabled:bg-orange-300"
+            className="w-full bg-orange-600 text-white font-semibold py-3 rounded-lg hover:bg-orange-700 transition duration-150 disabled:bg-orange-300 shadow-md"
           >
-            {submitting ? 'Please wait…' : mode === 'login' ? 'Log In' : 'Sign Up'}
+            {submitting ? 'Authenticating...' : mode === 'login' ? 'Log In' : 'Sign Up'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        {/* MODE TOGGLE  */}
+        <p className="text-center text-sm text-gray-600 mt-8">
           {mode === 'login' ? (
             <>
               Don’t have an account?{' '}
-              <button className="text-orange-600 hover:underline" onClick={() => setMode('signup')}>Sign up</button>
+              <button 
+                type="button" 
+                className="text-orange-600 font-medium hover:underline" 
+                onClick={() => setMode('signup')}
+              >
+                Sign up
+              </button>
             </>
           ) : (
             <>
               Already have an account?{' '}
-              <button className="text-orange-600 hover:underline" onClick={() => setMode('login')}>Log in</button>
+              <button 
+                type="button" 
+                className="text-orange-600 font-medium hover:underline" 
+                onClick={() => setMode('login')}
+              >
+                Log in
+              </button>
             </>
           )}
         </p>
