@@ -1,8 +1,8 @@
 /**
  * EventPin
  * Leaflet marker for an event. Pin color indicates timing:
- * - green: ongoing or starting within 1 hour
- * - gray: future (>1 hour)
+ * - green: starting within 24 hours
+ * - gray: future (>24 hours)
  * - orange: past
  */
 "use client";
@@ -36,7 +36,7 @@ const getPinStyle = (event: EventData) => {
     return { bgColor: "bg-orange-600", iconHtml };
   }
   const hoursDiff = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
-  if (hoursDiff <= 1) {
+  if (hoursDiff <= 24) {
     return { bgColor: "bg-green-600", iconHtml };
   }
   return { bgColor: "bg-gray-400", iconHtml };
