@@ -335,6 +335,60 @@
       "name": "Waterview Science and Technology Center",
       "link": "https://www.google.com/maps/place/UTD+Waterview+Science+and+Technology+Center,+17919+Waterview+Pkwy,+Dallas,+TX+75252/@32.9918289,-96.7569435,17z/data=!3m1!4b1!4m6!3m5!1s0x864c22047fcc9991:0x38399f6b7602beb2!8m2!3d32.9918289!4d-96.7569435!16s%2Fg%2F1tzzvxj8?entry=ttu&g_ep=EgoyMDI1MTEwNC4xIKXMDSoASAFQAw%3D%3D",
       "coordinate": "32.9918289,-96.7569435"
+    },
+    {
+      "abbreviation": "SF(1-6)",
+      "name": "Soccer Fields (1–6)",
+      "link": "https://www.google.com/maps?q=32.982574492534425,-96.75260876080723",
+      "coordinate": "32.982574492534425,-96.75260876080723"
+    },
+    {
+      "abbreviation": "SF(7-10)",
+      "name": "Soccer Fields (7–10)",
+      "link": "https://www.google.com/maps?q=32.980010565304966,-96.75273038648966",
+      "coordinate": "32.980010565304966,-96.75273038648966"
+    },
+    {
+      "abbreviation": "MPF",
+      "name": "Multipurpose Fields",
+      "link": "https://www.google.com/maps?q=32.98183021269074,-96.75033631739079",
+      "coordinate": "32.98183021269074,-96.75033631739079"
+    },
+    {
+      "abbreviation": "BBF",
+      "name": "Baseball Field",
+      "link": "https://www.google.com/maps?q=32.9817562440172,-96.74913266938127",
+      "coordinate": "32.9817562440172,-96.74913266938127"
+    },
+    {
+      "abbreviation": "SBF",
+      "name": "Softball Field",
+      "link": "https://www.google.com/maps?q=32.98266202401497,-96.74934624595285",
+      "coordinate": "32.98266202401497,-96.74934624595285"
+    },
+    {
+      "abbreviation": "TC(1-10)",
+      "name": "Tennis Courts (1–10)",
+      "link": "https://www.google.com/maps?q=32.982806261391126,-96.75030299180656",
+      "coordinate": "32.982806261391126,-96.75030299180656"
+    },
+    {
+      "abbreviation": "FITC",
+      "name": "Fitness Court",
+      "link": "https://www.google.com/maps?q=32.98390654034287,-96.7510139133836",
+      "coordinate": "32.98390654034287,-96.7510139133836"
+    },
+    {
+      "abbreviation": "BC(1-3)",
+      "name": "Basketball Courts (1–3)",
+      "link": "https://www.google.com/maps?q=32.98346002138862,-96.75057068016712",
+      "coordinate": "32.98346002138862,-96.75057068016712"
+    },
+    {
+      "abbreviation": "VBC",
+      "name": "Volleyball Courts",
+      "link": "https://www.google.com/maps?q=32.983305106121726,-96.75000794779912",
+      "coordinate": "32.983305106121726,-96.75000794779912"
     }
   ],
   "university_housing": [
