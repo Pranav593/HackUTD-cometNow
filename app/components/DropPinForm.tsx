@@ -1,138 +1,13 @@
 // app/components/DropPinForm.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { XMarkIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { containsInappropriateContent } from "../utils/content-filter";
 
 interface DropPinFormProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-// Simple iOS-like time wheel with hour (0-23) and minute (0-59)
-function TimePicker({
-  hour,
-  minute,
-  onChange,
-}: {
-  hour: number;
-  minute: number;
-  onChange: (h: number, m: number) => void;
-}) {
-  const ITEM_H = 36; // px per row
-  const HOURS = Array.from({ length: 24 }, (_, i) => i);
-  const MINUTES = Array.from({ length: 60 }, (_, i) => i);
-
-  const hourRef = useRef<HTMLDivElement | null>(null);
-  const minuteRef = useRef<HTMLDivElement | null>(null);
-  const hourScrollTimeout = useRef<number | null>(null);
-  const minuteScrollTimeout = useRef<number | null>(null);
-
-  // Scroll to current values when they change
-  // Initialize scroll positions to selected values centered (using spacer rows)
-  useEffect(() => {
-    if (hourRef.current) hourRef.current.scrollTop = hour * ITEM_H;
-    if (minuteRef.current) minuteRef.current.scrollTop = minute * ITEM_H;
-  }, []);
-
-  const finalizeHourScroll = () => {
-    const el = hourRef.current;
-    if (!el) return;
-    const idx = Math.round(el.scrollTop / ITEM_H);
-    const clamped = Math.max(0, Math.min(HOURS.length - 1, idx));
-    requestAnimationFrame(() => {
-      el.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
-      onChange(clamped, minute);
-    });
-  };
-  const finalizeMinuteScroll = () => {
-    const el = minuteRef.current;
-    if (!el) return;
-    const idx = Math.round(el.scrollTop / ITEM_H);
-    const clamped = Math.max(0, Math.min(MINUTES.length - 1, idx));
-    requestAnimationFrame(() => {
-      el.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
-      onChange(hour, clamped);
-    });
-  };
-  const handleHourScroll = () => {
-    if (hourScrollTimeout.current) window.clearTimeout(hourScrollTimeout.current);
-    hourScrollTimeout.current = window.setTimeout(finalizeHourScroll, 120);
-  };
-  const handleMinuteScroll = () => {
-    if (minuteScrollTimeout.current) window.clearTimeout(minuteScrollTimeout.current);
-    minuteScrollTimeout.current = window.setTimeout(finalizeMinuteScroll, 120);
-  };
-
-  const Column = ({ values, value, onPick, innerRef }: {
-    values: number[];
-    value: number;
-    onPick: (v: number) => void;
-    innerRef: React.RefObject<HTMLDivElement | null>;
-  }) => (
-    <div className="relative w-full">
-      <div
-        ref={innerRef}
-        onScroll={values.length === 24 ? handleHourScroll : handleMinuteScroll}
-        className="overflow-y-auto rounded-md border border-gray-300 bg-transparent dark:border-gray-600 dark:bg-transparent scroll-smooth"
-        style={{ scrollbarWidth: "none", height: ITEM_H * 3, touchAction: "pan-y" as any }}
-      >
-        {/* top spacer so first item can center */}
-        <div style={{ height: ITEM_H }} />
-        {values.map((v) => (
-          <div
-            key={v}
-            className={`flex items-center justify-center px-3`}
-            style={{ height: ITEM_H }}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                // Snap to item via scroll
-                const el = innerRef.current;
-                if (el) el.scrollTo({ top: v * ITEM_H, behavior: "smooth" });
-                onPick(v);
-              }}
-              className={`w-full text-center text-base ${
-                v === value
-                  ? "font-semibold text-gray-900 dark:text-white"
-                  : "text-gray-500 dark:text-gray-400"
-              }`}
-            >
-              {String(v).padStart(2, "0")}
-            </button>
-          </div>
-        ))}
-        {/* bottom spacer so last item can center */}
-        <div style={{ height: ITEM_H }} />
-      </div>
-      {/* highlight band */}
-      <div
-        className="pointer-events-none absolute left-0 right-0 rounded-md border border-orange-500/50"
-        style={{ top: `calc(50% - ${ITEM_H / 2}px)`, height: ITEM_H }}
-      />
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/70 via-transparent to-white/70 dark:from-gray-800/70 dark:to-gray-800/70" />
-    </div>
-  );
-
-  return (
-    <div className="flex items-center gap-4">
-      <Column
-        values={HOURS}
-        value={hour}
-        onPick={(v) => onChange(v, minute)}
-        innerRef={hourRef}
-      />
-      <span className="select-none text-lg font-semibold text-gray-700 dark:text-gray-200">:</span>
-      <Column
-        values={MINUTES}
-        value={minute}
-        onPick={(v) => onChange(hour, v)}
-        innerRef={minuteRef}
-      />
-    </div>
-  );
 }
 
 export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
@@ -144,37 +19,11 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
   // Keep year fixed to 2025; only allow editing month & day
   const YEAR = "2025";
   const [dateMD, setDateMD] = useState(""); // format MM-DD
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [startTime, setStartTime] = useState("9:00");
+  const [startTimeAmPm, setStartTimeAmPm] = useState<"AM" | "PM">("AM");
+  const [endTime, setEndTime] = useState("10:00");
+  const [endTimeAmPm, setEndTimeAmPm] = useState<"AM" | "PM">("AM");
   const [locationOptions, setLocationOptions] = useState<string[]>([]);
-  const pad2 = (n: number) => n.toString().padStart(2, "0");
-
-  // Derive hour/min for custom pickers
-  const [startHour, setStartHour] = useState<number>(0);
-  const [startMinute, setStartMinute] = useState<number>(0);
-  const [endHour, setEndHour] = useState<number>(0);
-  const [endMinute, setEndMinute] = useState<number>(0);
-
-  // Initialize times once
-  useEffect(() => {
-    const parse = (t?: string) => {
-      const [h, m] = (t || "00:00").split(":");
-      return [parseInt(h || "0", 10) || 0, parseInt(m || "0", 10) || 0] as [number, number];
-    };
-    const [sh, sm] = parse(startTime);
-    const [eh, em] = parse(endTime);
-    setStartHour(sh); setStartMinute(sm);
-    setEndHour(eh); setEndMinute(em);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Keep string HH:MM in sync
-  useEffect(() => {
-    setStartTime(`${pad2(startHour)}:${pad2(startMinute)}`);
-  }, [startHour, startMinute]);
-  useEffect(() => {
-    setEndTime(`${pad2(endHour)}:${pad2(endMinute)}`);
-  }, [endHour, endMinute]);
 
   // Load location names from public/enriched_locations.json
   useEffect(() => {
@@ -205,6 +54,18 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
     loadLocations();
   }, []);
 
+  const handleTimeChange = (
+    value: string,
+    setter: React.Dispatch<React.SetStateAction<string>>
+  ) => {
+    const digits = value.replace(/[^\d]/g, "");
+    if (digits.length <= 2) {
+      setter(digits);
+    } else if (digits.length <= 4) {
+      setter(`${digits.slice(0, 2)}:${digits.slice(2)}`);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -217,14 +78,27 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
 
     const [mm, dd] = (dateMD || "").split("/");
     const fullDate = mm && dd ? `${YEAR}-${mm}-${dd}` : "";
-    // Minimal payload; parent can wire this to map or storage
+
+    // Convert 12-hour time to 24-hour format
+    const to24Hour = (time: string, ampm: "AM" | "PM") => {
+      let [hours, minutes] = time.split(":").map(Number);
+      minutes = isNaN(minutes) ? 0 : minutes;
+      if (ampm === "PM" && hours < 12) {
+        hours += 12;
+      }
+      if (ampm === "AM" && hours === 12) {
+        hours = 0;
+      }
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+    };
+
     const payload = {
       title: description,
       category,
       location,
       date: fullDate, // yyyy-mm-dd (year fixed to 2025)
-      startTime, // HH:MM (24h)
-      endTime, // HH:MM (24h)
+      startTime: to24Hour(startTime, startTimeAmPm), // HH:MM (24h)
+      endTime: to24Hour(endTime, endTimeAmPm), // HH:MM (24h)
     };
     console.log("Submitting:", payload);
   };
@@ -403,23 +277,83 @@ export default function DropPinForm({ isOpen, onClose }: DropPinFormProps) {
               </div>
             </div>
 
-            {/* Time range with iOS-like wheels for hours (0-23) and minutes (0-59) */}
+            {/* Time range */}
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Start time</label>
-                <TimePicker
-                  hour={startHour}
-                  minute={startMinute}
-                  onChange={(h, m) => { setStartHour(h); setStartMinute(m); }}
+                <label htmlFor="startTime" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Start time
+                </label>
+                <input
+                  type="text"
+                  id="startTime"
+                  value={startTime}
+                  onChange={(e) => handleTimeChange(e.target.value, setStartTime)}
+                  placeholder="09:00"
+                  className="w-full rounded-md border border-gray-300 px-4 py-3 text-center text-lg text-gray-900 shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  maxLength={5}
                 />
+                <div className="mt-2 flex justify-center rounded-md shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setStartTimeAmPm("AM")}
+                    className={`w-1/2 rounded-l-md border px-3 py-2 text-sm font-semibold ${
+                      startTimeAmPm === "AM"
+                        ? "bg-orange-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    AM
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStartTimeAmPm("PM")}
+                    className={`-ml-px w-1/2 rounded-r-md border px-3 py-2 text-sm font-semibold ${
+                      startTimeAmPm === "PM"
+                        ? "bg-orange-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    PM
+                  </button>
+                </div>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">End time</label>
-                <TimePicker
-                  hour={endHour}
-                  minute={endMinute}
-                  onChange={(h, m) => { setEndHour(h); setEndMinute(m); }}
+                <label htmlFor="endTime" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  End time
+                </label>
+                <input
+                  type="text"
+                  id="endTime"
+                  value={endTime}
+                  onChange={(e) => handleTimeChange(e.target.value, setEndTime)}
+                  placeholder="10:00"
+                  className="w-full rounded-md border border-gray-300 px-4 py-3 text-center text-lg text-gray-900 shadow-sm focus:border-orange-500 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  maxLength={5}
                 />
+                <div className="mt-2 flex justify-center rounded-md shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setEndTimeAmPm("AM")}
+                    className={`w-1/2 rounded-l-md border px-3 py-2 text-sm font-semibold ${
+                      endTimeAmPm === "AM"
+                        ? "bg-orange-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    AM
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEndTimeAmPm("PM")}
+                    className={`-ml-px w-1/2 rounded-r-md border px-3 py-2 text-sm font-semibold ${
+                      endTimeAmPm === "PM"
+                        ? "bg-orange-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    PM
+                  </button>
+                </div>
               </div>
             </div>
 
