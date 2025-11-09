@@ -13,7 +13,7 @@ import EventDetailSheet from "@/app/components/EventDetailSheet"; // <-- 1. Impo
 // Define EventData shape here so this page knows about it
 interface EventData {
   title: string;
-  category: "Social" | "Food" | "Study" | "Academic"| "Career"|" Recreation" | string;
+  category: "Social" | "Food" | "Study" | "Academic" | "Career" | "Recreation" | "Other" | string;
   locationName: string;
   startTime: string;
   endTime: string;
@@ -27,22 +27,25 @@ export default function Home() {
 
   return (
     <main className="relative h-screen overflow-hidden">
-      {/* LAYER 0: THE MAP */}
-      <div className="absolute inset-0 z-0">
-        {/* 3. Pass the "setter" function down to the map */}
-        <ClientMap onPinClick={setSelectedEvent} />
-      </div>
-
-      {/* LAYER 1: THE UI */}
-      <div className="relative z-10 h-full w-full pointer-events-none">
-        <div className="pointer-events-auto">
-          <TopBar />
-          <FilterBar />
+      {/* BLURRED CONTENT WHEN FORM OPEN */}
+  <div className={isFormOpen ? "relative h-full w-full blur-sm transition duration-200" : "relative h-full w-full transition duration-200"}>
+        {/* LAYER 0: THE MAP */}
+        <div className="absolute inset-0 z-0">
+          {/* 3. Pass the "setter" function down to the map */}
+          <ClientMap onPinClick={setSelectedEvent} />
         </div>
-        
-        <div className="pointer-events-auto">
-          <DropPinButton onClick={() => setIsFormOpen(true)} />
-          <BottomNav />
+
+        {/* LAYER 1: THE UI */}
+        <div className="relative z-10 h-full w-full pointer-events-none">
+          <div className="pointer-events-auto">
+            <TopBar />
+            <FilterBar />
+          </div>
+          
+          <div className="pointer-events-auto">
+            <DropPinButton onClick={() => setIsFormOpen(true)} />
+            <BottomNav />
+          </div>
         </div>
       </div>
 
