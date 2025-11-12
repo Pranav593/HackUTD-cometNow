@@ -5,7 +5,7 @@ import { collection, getDocs } from "firebase/firestore";
 import * as cheerio from "cheerio";
 
 async function fetchFirebaseData() {
-  const collections = ["users", "events", "locations"]; // Add all your collection names here
+  const collections = ["users", "events", "locations"];
   let allData = "";
 
   for (const collectionName of collections) {
